@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      APP_ORIGIN: ${APP_ORIGIN:?Set APP_ORIGIN to the public HTTPS origin}
+      TRUST_PROXY: "1"
+      DATABASE_PATH: /app/data/moimpyo.sqlite
+    volumes:
+      - moimpyo-data:/app/data
+    ports:
+      - "127.0.0.1:3000:3000"
+volumes:
+  moimpyo-data:

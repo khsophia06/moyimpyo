@@ -1,0 +1,32 @@
+{
+  "name": "moimpyo",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "engines": { "node": ">=24.0.0" },
+  "scripts": {
+    "dev": "node server/index.js",
+    "build": "vite build",
+    "start": "node server/index.js --production",
+    "test": "node --test tests/*.test.js",
+    "test:e2e": "playwright test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "vite": "^8.3.1"
+  },
+  "dependencies": {
+    "@fontsource-variable/noto-sans-kr": "^5.3.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}
