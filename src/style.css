@@ -60,3 +60,5 @@ body:has(.time-focused-page) .site-header{height:64px}.time-focused-page{padding
 
 .meeting-statuses{display:flex;gap:8px;flex-wrap:wrap}.meeting-time-picker>.button.secondary{margin-top:12px}.place-actions{flex-wrap:wrap}.add-place-form>.button{margin-right:8px}
 @media(max-width:767px){.meeting-statuses{gap:6px}.meeting-statuses .status{display:inline-flex}.meeting-row{flex-wrap:wrap}.meeting-row-info{flex-basis:100%}}
+
+.place-map-field{min-width:0}.place-map-field>.text-link{margin-top:12px;font-size:13px}.place-map-field>p{margin:6px 0 0;line-height:1.6}.add-place-form .field-pair{align-items:start}
