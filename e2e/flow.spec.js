@@ -50,11 +50,11 @@ test('주최자와 별도 모바일 브라우저: 생성, 드래그, 응답 수�
   await page.getByRole('button',{name:'전체 현황',exact:true}).click(); await page.getByRole('button',{name:'현황 새로고침'}).click();
   await page.locator('[data-recommendation="all"] summary').click();
   await expect(page.locator('[data-recommendation="all"] .candidate').first()).toBeVisible();
-  await page.getByRole('button',{name:'확정할 시간 선택',exact:true}).click();
+  await page.getByRole('button',{name:'모임 시간 정하기',exact:true}).click();
   await page.locator('[data-slot="2026-10-09/840"]').click(); await expect(page.locator('.chosen-time')).toContainText('2/2명');
   await page.screenshot({path:'test-results/time-desktop.png',fullPage:true});
   await expect(page.locator('.confirmation-cell')).toHaveCount(4);
-  await page.getByRole('button',{name:'모임 시간 확정',exact:true}).click(); await page.getByRole('button',{name:'확인하고 저장'}).click();
+  await page.getByRole('button',{name:'이 시간으로 확정',exact:true}).click(); await page.getByRole('button',{name:'확인하고 저장'}).click();
   await page.getByRole('link',{name:'모임 홈',exact:true}).click(); await expect(page.getByText('시간 확정',{exact:true})).toBeVisible(); await expect(page.getByText('장소 정하는 중',{exact:true})).toBeVisible();
   await page.getByRole('link',{name:'장소',exact:true}).click(); await page.getByRole('button',{name:'이 장소 확정'}).click(); await page.getByRole('button',{name:'확인하고 저장'}).click();
   await guest.goto(url); await expect(guest.getByText('장소 확정',{exact:true})).toBeVisible(); await expect(guest.getByText('시간 확정',{exact:true})).toBeVisible();

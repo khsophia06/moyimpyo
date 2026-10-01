@@ -83,7 +83,12 @@ export function createApp({ dbPath = process.env.DATABASE_PATH || 'data/moimpyo.
     cookie(res, 'mp_session', raw, 30); res.json({ user: { id: user.id, name: user.name, email: user.email } });
   });
   app.post('/api/logout', (req, res) => { if (req.cookies.mp_session) db.prepare('DELETE FROM sessions WHERE hash=?').run(hash(req.cookies.mp_session)); cookie(res, 'mp_session', '', 0); res.json({ ok: true }); });
-  app.get('/api/meetings', (req, res) => { const user = requireUser(req); res.json(db.prepare('SELECT * FROM meetings WHERE owner=? ORDER BY rowid DESC').all(user.id).map(row => ({ ...JSON.parse(row.data), id: row.id }))); });
+  app.get('/api/meetings', (req, res) => {
+    const user = requireUser(req);
+    const rows = db.prepare(`SELECT m.* FROM meetings m WHERE m.owner=? OR EXISTS
+      (SELECT 1 FROM participants p WHERE p.meeting=m.id AND p.identity=?) ORDER BY m.rowid DESC`).all(user.id, `user:${user.id}`);
+    res.json(rows.map(row => ({ ...JSON.parse(row.data), id: row.id, isOwner: row.owner === user.id })));
+  });
   app.post('/api/meetings', (req, res) => {
     const user = requireUser(req), data = meetingInput(req.body), mid = id();
     db.prepare('INSERT INTO meetings VALUES(?,?,?)').run(mid, user.id, JSON.stringify({ ...data, revision: 1, timeRevision: 1, finalizedTime: null, finalizedPlace: data.directPlace, createdAt: new Date().toISOString() }));

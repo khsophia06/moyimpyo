@@ -93,6 +93,17 @@ test('실제 HTTP: 인증, 참여자 격리, 투표 수정, 서버 권한, 설�
   assert.equal(afterFinalResponse.meeting.finalizedTime.start,630);
   // Deletion is owner-only, revision-checked, and cleans up only this meeting.
   const kept = (await owner.request('/meetings', 'POST', input)).body.id;
+  // A signed-in participant sees joined meetings, but unrelated meetings stay private.
+  assert.deepEqual((await other.request('/meetings')).body, []);
+  await other.request(path + '/join', 'POST', {});
+  const participantList = (await other.request('/meetings')).body;
+  assert.deepEqual(participantList.map(m => [m.id, m.isOwner]), [[mid, false]]);
+  const ownerList = (await owner.request('/meetings')).body;
+  assert.equal(ownerList.filter(m => m.id === mid).length, 1);
+  assert.ok(ownerList.every(m => m.isOwner));
+  const otherParticipant = (await other.request(path)).body.mine.id;
+  await owner.request(path + '/participants/' + otherParticipant + '/remove', 'POST', { revision:6 });
+  assert.deepEqual((await other.request('/meetings')).body, []);
   assert.equal((await guest1.request(path, 'DELETE', {revision:6})).status,401);
   assert.equal((await other.request(path, 'DELETE', {revision:6})).status,403);
   assert.equal((await owner.request(path, 'DELETE', {revision:1})).status,409);
