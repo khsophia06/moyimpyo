@@ -1,0 +1,16 @@
+BEGIN;
+CREATE SCHEMA IF NOT EXISTS moimpyo;
+REVOKE ALL ON SCHEMA moimpyo FROM PUBLIC, anon, authenticated;
+CREATE TABLE IF NOT EXISTS moimpyo.users (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password TEXT NOT NULL, name TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS moimpyo.sessions (hash TEXT PRIMARY KEY, user_id TEXT REFERENCES moimpyo.users(id), expires BIGINT NOT NULL);
+CREATE TABLE IF NOT EXISTS moimpyo.meetings (id TEXT PRIMARY KEY, owner TEXT REFERENCES moimpyo.users(id), data TEXT NOT NULL, rowid BIGSERIAL UNIQUE);
+CREATE TABLE IF NOT EXISTS moimpyo.participants (id TEXT PRIMARY KEY, meeting TEXT REFERENCES moimpyo.meetings(id), identity TEXT NOT NULL, name TEXT NOT NULL, slots TEXT, revision INTEGER NOT NULL DEFAULT 1, UNIQUE(meeting, identity));
+CREATE TABLE IF NOT EXISTS moimpyo.places (id TEXT PRIMARY KEY, meeting TEXT REFERENCES moimpyo.meetings(id), name TEXT NOT NULL, address TEXT NOT NULL, note TEXT NOT NULL, creator TEXT, rowid BIGSERIAL UNIQUE);
+CREATE TABLE IF NOT EXISTS moimpyo.votes (participant TEXT REFERENCES moimpyo.participants(id), place TEXT REFERENCES moimpyo.places(id), PRIMARY KEY(participant, place));
+CREATE TABLE IF NOT EXISTS moimpyo.removed_participants (meeting TEXT REFERENCES moimpyo.meetings(id), identity TEXT NOT NULL, PRIMARY KEY(meeting, identity));
+REVOKE ALL ON ALL TABLES IN SCHEMA moimpyo FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA moimpyo FROM PUBLIC, anon, authenticated;
+CREATE INDEX IF NOT EXISTS participants_meeting_idx ON moimpyo.participants(meeting);
+CREATE INDEX IF NOT EXISTS places_meeting_idx ON moimpyo.places(meeting);
+CREATE INDEX IF NOT EXISTS votes_place_idx ON moimpyo.votes(place);
+COMMIT;
