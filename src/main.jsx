@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ArrowUpRight, SignOut } from '@phosphor-icons/react';
 import '@fontsource-variable/noto-sans-kr';
+import '@fontsource-variable/inter';
 import './style.css';
 import { api } from './api';
 import { Link, go, Notice } from './ui';

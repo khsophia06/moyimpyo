@@ -7,7 +7,9 @@ export function string(value, label, max, required = false) {
 export function placeInput(b) {
   const name = string(b.name, '장소 이름', 100, true), address = string(b.address ?? '', '주소 또는 지도 링크', 500), note = string(b.note ?? '', '설명', 300);
   if (/^[a-z][a-z0-9+.-]*:/i.test(address) && !/^https?:\/\//i.test(address)) fail('지도 링크는 http 또는 https 주소를 사용해 주세요.');
-  return { name, address, note };
+  const mapUrl = string(b.mapUrl ?? '', '지도 링크', 500);
+  if (mapUrl && !/^https?:\/\//i.test(mapUrl)) fail('지도 링크는 http 또는 https 주소를 사용해 주세요.');
+  return { name, address, note, ...(mapUrl ? { mapUrl } : {}) };
 }
 export function meetingInput(b) {
   const title = string(b.title, '모임 이름', 100, true), description = string(b.description ?? '', '설명', 1000);

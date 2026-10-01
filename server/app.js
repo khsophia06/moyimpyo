@@ -1,4 +1,5 @@
 import express from 'express';
+import { createGeocoder } from './maps.js';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import { randomBytes, createHash, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto';
@@ -13,9 +14,10 @@ const id = () => randomBytes(16).toString('base64url');
 export function createApp({ dbPath = process.env.DATABASE_PATH || 'data/moimpyo.sqlite', production = false, origin = process.env.APP_ORIGIN } = {}) {
   if (production && !origin?.startsWith('https://')) throw new Error('운영 환경에서는 https APP_ORIGIN을 설정하세요.');
   const db = openStore(dbPath), app = express();
+  const geocode = createGeocoder();
   app.disable('x-powered-by');
   if (process.env.TRUST_PROXY === '1') app.set('trust proxy', 1);
-  app.use(helmet({ contentSecurityPolicy: production ? { directives: { 'upgrade-insecure-requests': [], 'style-src': ["'self'", "'unsafe-inline'"], 'script-src': ["'self'"], 'connect-src': ["'self'"] } } : false, strictTransportSecurity: production ? undefined : false, referrerPolicy: { policy: 'no-referrer' } }));
+  app.use(helmet({ contentSecurityPolicy: production ? { directives: { 'upgrade-insecure-requests': [], 'style-src': ["'self'", "'unsafe-inline'"], 'script-src': ["'self'"], 'connect-src': ["'self'"], 'frame-src': ['https://www.openstreetmap.org'] } } : false, strictTransportSecurity: production ? undefined : false, referrerPolicy: { policy: 'no-referrer' } }));
   app.use('/api', (req, res, next) => {
     res.set('Cache-Control', 'no-store');
     if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
@@ -105,12 +107,17 @@ export function createApp({ dbPath = process.env.DATABASE_PATH || 'data/moimpyo.
     });
     res.json({ ok: true });
   });
+  app.get('/api/meetings/:id/map', async (req, res) => {
+    const m = getMeeting(req), address = m.finalizedPlace?.address?.trim();
+    if (!address || /^https?:\/\//i.test(address)) return res.json({point:null});
+    try { res.json({point:await geocode(address)}); } catch { res.status(503).json({error:'지도를 불러오지 못했어요. 주소 링크를 이용해 주세요.'}); }
+  });
   app.get('/api/meetings/:id', (req, res) => {
     const m = getMeeting(req);
     const participants = db.prepare('SELECT * FROM participants WHERE meeting=?').all(m.id);
     const responses = participants.filter(p => p.slots !== null).map(p => ({ id: p.id, name: p.name, slots: JSON.parse(p.slots), revision: p.revision }));
     const mine = participants.find(p => p.identity === req.identity);
-    const places = db.prepare('SELECT p.*, (SELECT COUNT(*) FROM votes v WHERE v.place=p.id) AS count FROM places p WHERE meeting=? ORDER BY count DESC, p.rowid ASC').all(m.id);
+    const places = db.prepare('SELECT p.*, (SELECT COUNT(*) FROM votes v WHERE v.place=p.id) AS count FROM places p WHERE meeting=? ORDER BY count DESC, p.rowid ASC').all(m.id).map(({ creator, ...p }) => ({ ...p, canEdit: !!mine && creator === mine.id }));
     const myVotes = mine ? db.prepare('SELECT place FROM votes WHERE participant=?').all(mine.id).map(v => v.place) : [];
     const valid = new Set(allowedSlots(m));
     const { owner, ...publicMeeting } = m;
@@ -165,8 +172,27 @@ export function createApp({ dbPath = process.env.DATABASE_PATH || 'data/moimpyo.
     const m = getMeeting(req); checkRevision(req, m);
     if (m.placeMode !== 'together' || m.finalizedPlace) fail('현재 장소 후보를 추가할 수 없습니다.', 409);
     const p = placeInput(req.body.place || {});
+    if (!p.address) fail('주소 또는 지도 링크를 입력해 주세요.');
     if (db.prepare('SELECT COUNT(*) AS n FROM places WHERE meeting=?').get(m.id).n >= 50) fail('장소 후보는 최대 50개까지 추가할 수 있습니다.');
-    transaction(() => { participant(req, res, m); db.prepare('INSERT INTO places VALUES(?,?,?,?,?)').run(id(), m.id, p.name, p.address, p.note); }); res.status(201).json({ ok: true });
+    transaction(() => { const author = participant(req, res, m); db.prepare('INSERT INTO places(id,meeting,name,address,note,creator) VALUES(?,?,?,?,?,?)').run(id(), m.id, p.name, p.address, p.note, author.id); }); res.status(201).json({ ok: true });
+  });
+  for (const method of ['patch', 'delete']) app[method]('/api/meetings/:id/places/:placeId', (req, res) => {
+    const m = getMeeting(req); checkRevision(req, m);
+    if (m.placeMode !== 'together' || m.finalizedPlace) fail('장소 확정을 해제한 후 수정할 수 있어요.', 409);
+    const p = db.prepare('SELECT * FROM places WHERE id=? AND meeting=?').get(req.params.placeId, m.id);
+    if (!p) fail('장소 후보를 찾을 수 없어요.', 404);
+    const mine = req.identity && db.prepare('SELECT id FROM participants WHERE meeting=? AND identity=?').get(m.id, req.identity);
+    if (!mine || p.creator !== mine.id) fail('이 후보를 추가한 사람만 수정하거나 삭제할 수 있어요.', 403);
+    const next = method === 'patch' ? placeInput(req.body.place || {}) : null;
+    if (next && !next.address) fail('주소 또는 지도 링크를 입력해 주세요.');
+    transaction(() => {
+      if (next) db.prepare('UPDATE places SET name=?,address=?,note=? WHERE id=?').run(next.name, next.address, next.note, p.id);
+      else {
+        db.prepare('DELETE FROM votes WHERE place=?').run(p.id);
+        db.prepare('DELETE FROM places WHERE id=?').run(p.id);
+      }
+    });
+    res.json({ ok: true });
   });
   app.put('/api/meetings/:id/votes', (req, res) => {
     const m = getMeeting(req); checkRevision(req, m);

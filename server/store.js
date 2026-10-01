@@ -12,5 +12,6 @@ export function openStore(path) {
     CREATE TABLE IF NOT EXISTS places (id TEXT PRIMARY KEY, meeting TEXT REFERENCES meetings(id), name TEXT NOT NULL, address TEXT NOT NULL, note TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS votes (participant TEXT REFERENCES participants(id), place TEXT REFERENCES places(id), PRIMARY KEY(participant, place));
     CREATE TABLE IF NOT EXISTS removed_participants (meeting TEXT REFERENCES meetings(id), identity TEXT NOT NULL, PRIMARY KEY(meeting, identity));`);
+  if (!db.prepare('PRAGMA table_info(places)').all().some(c => c.name === 'creator')) db.exec('ALTER TABLE places ADD COLUMN creator TEXT');
   return db;
 }
