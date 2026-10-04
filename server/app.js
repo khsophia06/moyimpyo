@@ -42,11 +42,12 @@ export function createApp({
       directives: {
         'upgrade-insecure-requests': [],
         'style-src': ["'self'", "'unsafe-inline'"],
-        'script-src': ["'self'"],
-        'connect-src': ["'self'"],
-        'frame-src': ['https://www.openstreetmap.org']
+        'script-src': ["'self'", 'https://t1.kakaocdn.net'],
+        'connect-src': ["'self'", 'https://kapi.kakao.com'],
+        'frame-src': ['https://www.openstreetmap.org', 'https://kauth.kakao.com']
       }
     } : false,
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
     strictTransportSecurity: production ? undefined : false,
     referrerPolicy: {
       policy: 'no-referrer'
@@ -334,6 +335,17 @@ export function createApp({
       const name = string(req.body.name, '참여자 이름', 40, true);
       await db.prepare('UPDATE participants SET name=? WHERE id=?').run(name, existing.id);
     }
+    res.json({ ok: true });
+  }));
+  app.post('/api/meetings/:id/leave', meetingWrite(async (req, res) => {
+    const m = await getMeeting(req);
+    if (req.user?.id === m.owner) fail('주최자는 모임에서 나갈 수 없습니다.', 403);
+    if (!req.identity) fail('먼저 모임에 참여해 주세요.', 403);
+    const p = await db.prepare('SELECT id FROM participants WHERE meeting=? AND identity=?').get(m.id, req.identity);
+    if (p) await transaction(async () => {
+      await db.prepare('DELETE FROM votes WHERE participant=?').run(p.id);
+      await db.prepare('DELETE FROM participants WHERE id=?').run(p.id);
+    });
     res.json({ ok: true });
   }));
   app.patch('/api/meetings/:id/participants/me', meetingWrite(async (req, res) => {
