@@ -8,7 +8,7 @@ export function Participants({ data: d, reload, ask }) {
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const members = d.participants || [];
   return <section className="response-section">
-    <div className="section-title"><h2>모임원 <span className="count">{members.length}</span></h2><Link to={`/m/${d.meeting.id}/time`} className="text-link">{d.isOwner ? '결과 확인 및 시간 확정' : '전체 현황 보기'}<ArrowRight size={17}/></Link></div>
+    <div className="section-title"><h2>모임원 <span className="count">{members.length}</span></h2></div>
     <Notice error>{error}</Notice>
     {editing && <form className="rename-participant" onSubmit={async e => {
       e.preventDefault(); setBusy(true); setError('');

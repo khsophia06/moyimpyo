@@ -62,3 +62,59 @@ body:has(.time-focused-page) .site-header{height:64px}.time-focused-page{padding
 @media(max-width:767px){.meeting-statuses{gap:6px}.meeting-statuses .status{display:inline-flex}.meeting-row{flex-wrap:wrap}.meeting-row-info{flex-basis:100%}}
 
 .place-map-field{min-width:0}.place-map-field>.text-link{margin-top:12px;font-size:13px}.place-map-field>p{margin:6px 0 0;line-height:1.6}.add-place-form .field-pair{align-items:start}
+/* Discrete dates and a complete time range without vertical scrolling. */
+.date-picker{border:0;padding:0;margin:0;min-width:0}
+.date-picker legend{font-weight:650;margin-bottom:8px}
+.calendar-nav{display:flex;align-items:center;justify-content:space-between;margin:18px 0 10px}
+.calendar-nav button{width:44px;height:44px;border:1px solid var(--line);border-radius:4px}
+.date-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.calendar-weekday{text-align:center;font-size:12px;color:var(--muted);padding:8px 0}
+.date-calendar button{min-height:44px;border:1px solid var(--line);border-radius:4px;font-size:14px}
+.date-calendar button[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+.date-calendar button:disabled{opacity:.35;cursor:not-allowed}
+.calendar-summary{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-top:12px}
+.selected-dates{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.selected-dates button{padding:7px 10px;background:var(--soft);border:1px solid var(--line);border-radius:4px;font-size:12px}
+.redesigned-time .grid-scroll{height:min(720px,calc(100svh - 120px));min-height:0;max-height:none;overflow:hidden}
+.redesigned-time .time-grid{height:100%;min-width:0}
+.redesigned-time .grid-corner,.redesigned-time .day-heading{min-height:0;position:static;padding:3px 0}
+.redesigned-time .day-heading span{font-size:10px;margin:0}
+.redesigned-time .day-heading strong{font-size:13px}
+.redesigned-time .time-cell,.redesigned-time .time-label{min-height:0;line-height:1;font-size:10px}
+.redesigned-time .time-cell span{min-height:0;height:100%;gap:2px;overflow:hidden}
+.redesigned-time .time-cell span svg{height:10px;width:10px;flex-shrink:0}
+.redesigned-time .time-cell.my-outline:after{inset:1px;border-width:1px}
+.redesigned-time .time-label{position:static;font-size:9px;align-items:flex-start}
+.redesigned-time .time-label.half{border-top:0}
+.redesigned-time .week-gap{background:#fafbf8;border:0}
+.time-end-label{font-size:9px;text-align:center;line-height:18px;background:#fafbf8}
+.time-end-line{border-top:1px solid #bccab6}
+.redesigned-time .grid-tools{scroll-margin-top:8px}
+@media(max-width:767px){.redesigned-time .grid-tools{min-height:60px}.redesigned-time .time-cell{font-size:9px}.redesigned-time .interval-start:before{display:none}}
+
+.settings-help{margin-top:12px;font-size:13px;line-height:1.7;color:var(--muted)}
+
+/* Compact timetable and meeting overview cards. */
+.settings-help{background:#fff;font-size:18px}
+.redesigned-time .candidate-panel .time-work-mode{display:flex;flex-direction:column;align-items:stretch;margin:0 0 24px;padding:0 0 20px;border:0;border-bottom:1px solid var(--line);background:transparent;gap:16px}
+.redesigned-time .candidate-panel .time-work-mode h2{font-size:20px}
+.redesigned-time .candidate-panel .time-work-mode .inline-actions{display:flex;flex-direction:column;align-items:stretch}
+.redesigned-time .final-actions{padding-top:12px}
+.home-layout{display:block}
+.home-main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;max-width:960px}
+.home-main>h2{grid-column:1/-1;margin:0}
+.home-main .summary-row{aspect-ratio:1;min-width:0;padding:28px;border:1px solid var(--line);background:var(--soft);border-radius:4px;flex-direction:column;gap:18px}
+.home-main .summary-row:last-child{padding-bottom:28px;border-bottom:1px solid var(--line)}
+.home-main .summary-row>div:last-child{display:flex;flex:1;min-width:0;flex-direction:column;align-items:flex-start;gap:12px}
+.home-main .summary-row h3{margin:0;overflow-wrap:anywhere}
+.home-main .summary-row .button{align-self:stretch;margin-top:auto;justify-content:center}
+@media(max-width:767px){.home-main{gap:12px}.home-main .summary-row{padding:14px;gap:10px;min-height:240px}.home-main .summary-row:last-child{padding-bottom:14px}.home-main .summary-row h3{font-size:21px}.home-main .summary-row p{font-size:12px}.home-main .summary-row .button{padding:10px 6px;font-size:12px;gap:4px}.home-main .summary-icon{width:32px;height:32px}.home-main .summary-row .status{font-size:10px}}
+@media(max-width:767px){.home-main .summary-row{width:100%;aspect-ratio:auto;min-height:240px}}
+
+.redesigned-time .candidate-panel{padding:0;background:transparent;display:grid;gap:20px}
+.redesigned-time .candidate-panel .time-work-mode,.redesigned-time .recommendations-card,.redesigned-time .meeting-time-picker{padding:22px;margin:0;border:1px solid var(--line);border-radius:4px;background:#f0f4ee}
+.redesigned-time .recommendations-card .candidate-heading{margin-bottom:24px}
+
+.guest-welcome{max-width:460px;margin:64px auto;padding:28px;border:1px solid var(--line);border-radius:4px;background:var(--soft)}.guest-welcome h1{font-size:30px;overflow-wrap:anywhere}.guest-welcome p{margin:18px 0;color:var(--muted)}.guest-welcome form{display:grid;gap:20px}
+
+.vote-choice{border:0;padding:10px;min-width:44px;min-height:44px;justify-content:center;background:transparent}.vote-choice input{width:22px;height:22px}

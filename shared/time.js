@@ -7,14 +7,35 @@ export function datesBetween(start, end) {
   return dates;
 }
 export const slotKey = (date, minute) => `${date}/${minute}`;
+// Older meetings keep their original continuous range.
+export const meetingDates = m => m.dates ?? datesBetween(m.startDate, m.endDate);
+export function weekKey(date) {
+  const day = new Date(date + 'T00:00:00Z');
+  day.setUTCDate(day.getUTCDate() - day.getUTCDay());
+  return day.toISOString().slice(0, 10);
+}
+// Keep each Sunday–Saturday group intact, even on narrow screens.
+export function datePages(dates, preferredSize = 7) {
+  const weeks = [];
+  for (const date of dates) {
+    if (!weeks.length || weekKey(weeks.at(-1)[0]) !== weekKey(date)) weeks.push([]);
+    weeks.at(-1).push(date);
+  }
+  const pages = [];
+  for (const week of weeks) {
+    if (!pages.length || pages.at(-1).length + week.length > preferredSize) pages.push([]);
+    pages.at(-1).push(...week);
+  }
+  return pages;
+}
 export function allowedSlots(m) {
-  return datesBetween(m.startDate, m.endDate).flatMap(date => Array.from({ length: (m.endMinute - m.startMinute) / 30 }, (_, i) => slotKey(date, m.startMinute + i * 30)));
+  return meetingDates(m).flatMap(date => Array.from({ length: (m.endMinute - m.startMinute) / 30 }, (_, i) => slotKey(date, m.startMinute + i * 30)));
 }
 export function calculate(m, responses) {
   const sets = responses.map(r => new Set(r.slots));
   const counts = Object.fromEntries(allowedSlots(m).map(k => [k, sets.filter(s => s.has(k)).length]));
   const candidates = [], common = [];
-  for (const date of datesBetween(m.startDate, m.endDate)) {
+  for (const date of meetingDates(m)) {
     let run = null;
     for (let t = m.startMinute; t < m.endMinute; t += 30) {
       const all = responses.length > 0 && counts[slotKey(date, t)] === responses.length;
@@ -40,7 +61,7 @@ export function recommendationGroups(m, responses, result = calculate(m, respons
   const sets = responses.map(r => new Set(r.slots));
   const majority = Math.floor(responses.length / 2) + 1;
   const short = [];
-  for (const date of datesBetween(m.startDate, m.endDate)) {
+  for (const date of meetingDates(m)) {
     for (let start = m.startMinute; start < m.endMinute; start += 30) {
       let members = sets.map((_, i) => i), end = start;
       for (let t = start; t < m.endMinute; t += 30) {

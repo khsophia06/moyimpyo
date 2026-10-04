@@ -11,13 +11,21 @@ test('실제 HTTP: 인증, 참여자 격리, 투표 수정, 서버 권한, 설�
   let base = `http://127.0.0.1:${server.address().port}`;
   const client = () => { const cookies = {}; return { async request(path, method = 'GET', body, extra = {}) { const r = await fetch(base + '/api' + path, { method, headers: { 'Content-Type': 'application/json', 'X-Moimpyo': '1', Cookie: Object.entries(cookies).map(([k,v]) => `${k}=${v}`).join('; '), ...extra }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) }); for (const c of r.headers.getSetCookie()) { const [k,v] = c.split(';')[0].split('='); cookies[k] = v; assert.match(c, /HttpOnly/); assert.match(c, /SameSite=Lax/); } return { status: r.status, body: await r.json() }; } }; };
   t.after(async () => { await new Promise(r => server.close(r)); instance.db.close(); rmSync(dir, { recursive: true, force: true }); });
+  const simple = client();
+  assert.equal((await simple.request('/auth/register','POST',{name:'간단',email:'가',password:'1'})).status,200);
+  await simple.request('/logout','POST',{});
+  assert.equal((await simple.request('/auth/login','POST',{email:'가',password:'1'})).status,200);
+  assert.equal((await simple.request('/auth/login','POST',{email:'가',password:''})).status,400);
   const owner = client(), other = client(), guest1 = client(), guest2 = client();
   assert.equal((await guest1.request('/meetings', 'POST', input)).status, 401);
   assert.equal((await owner.request('/auth/register', 'POST', { name:'주최자',email:'owner@example.com',password:'password12345' })).status, 200);
   const mid = (await owner.request('/meetings', 'POST', input)).body.id, path = '/meetings/' + mid;
   const initial = (await guest1.request(path)).body;
+  assert.deepEqual((await guest1.request('/meetings')).body, []);
   assert.equal(initial.result.total, 0); assert.deepEqual(initial.result.common, []); assert.equal(initial.isOwner, false);
   assert.equal((await guest1.request(path + '/response', 'PUT', { name:'민수', slots:['2026-10-10/540','2026-10-10/570'], revision:1 })).status, 200);
+  assert.deepEqual((await guest1.request('/meetings')).body.map(m => [m.id, m.isOwner]), [[mid, false]]);
+  assert.deepEqual((await guest2.request('/meetings')).body, []);
   assert.equal((await guest2.request(path)).body.mine, null);
   await guest2.request(path + '/response', 'PUT', { name:'민수', slots:['2026-10-10/600'], revision:1 });
   assert.equal((await owner.request(path)).body.result.total, 2);
@@ -31,7 +39,7 @@ test('실제 HTTP: 인증, 참여자 격리, 투표 수정, 서버 권한, 설�
   await guest1.request(path + '/places', 'POST', {name:'민수',revision:1,place:{name:'카페',address:'https://example.com/map',note:'조용해요'}});
   await guest2.request(path + '/places', 'POST', {name:'민수',revision:1,place:{name:'회의실',address:'서울 성북구 정릉로 77'}});
   const places = (await owner.request(path)).body.places;
-  assert.equal((await guest1.request(path + '/places', 'POST', {name:'민수',revision:1,place:{name:'주소 없는 후보'}})).status,400);
+  assert.equal((await guest1.request(path + '/places', 'POST', {name:'민수',revision:1,place:{name:'주소 없는 후보'}})).status,201);
   assert.equal((await guest1.request(path)).body.places.find(p=>p.id===places[0].id).canEdit,true);
   assert.equal((await owner.request(path)).body.places[0].canEdit,false);
   assert.equal((await owner.request(path + '/places/' + places[0].id,'PATCH',{revision:1,place:{name:'위조',address:'서울'}})).status,403);
@@ -63,17 +71,21 @@ test('실제 HTTP: 인증, 참여자 격리, 투표 수정, 서버 권한, 설�
   assert.equal((await owner.request(path,'PATCH',{...input,revision:4,acknowledge:true},{Origin:'https://evil.example'})).status,403);
   await new Promise(r => server.close(r)); instance.db.close();
   instance = createApp({ dbPath }); server = instance.app.listen(0,'127.0.0.1'); await new Promise(r => server.once('listening',r)); base = `http://127.0.0.1:${server.address().port}`;
+  assert.deepEqual((await guest1.request('/meetings')).body.map(m => m.id), [mid]);
   const persisted = (await owner.request(path)).body;
-  assert.equal(persisted.result.total,2); assert.equal(persisted.places.length,2); assert.ok(persisted.isOwner); assert.equal(persisted.meeting.finalizedPlace.name,'카페');
-  await owner.request('/logout','POST',{}); assert.equal((await owner.request('/meetings')).status,401);
+  assert.equal(persisted.result.total,2); assert.equal(persisted.places.length,3); assert.equal(persisted.places.find(p=>p.name==='주소 없는 후보').address,''); assert.ok(persisted.isOwner); assert.equal(persisted.meeting.finalizedPlace.name,'카페');
+  await owner.request('/logout','POST',{}); assert.deepEqual((await owner.request('/meetings')).body,[]);
   assert.equal((await owner.request('/auth/login','POST',{email:'owner@example.com',password:'wrongpassword'})).status,401);
   assert.equal((await owner.request('/auth/login','POST',{email:'owner@example.com',password:'password12345'})).status,200);
   assert.equal((await guest1.request('/meetings/bad-link')).status,404);
   // Entering creates an unanswered participant, without inventing an availability response.
   const visitor = client();
-  assert.equal((await visitor.request(path + '/join','POST',{})).status,200);
+  assert.equal((await visitor.request(path + '/join','POST',{})).status,400);
+  assert.equal((await visitor.request(path + '/join','POST',{name:'직접 쓴 이름'})).status,200);
   const joined = (await visitor.request(path)).body;
+  assert.deepEqual((await visitor.request('/meetings')).body.map(m => [m.id, m.isOwner]), [[mid, false]]);
   assert.equal(joined.mine.slots,null);
+  assert.equal(joined.mine.name,'직접 쓴 이름');
   assert.equal(joined.result.total,2);
   assert.equal(joined.participants.find(p=>p.isMine).responded,false);
   assert.equal((await visitor.request(path + '/join','POST',{})).status,200);
@@ -106,7 +118,7 @@ test('실제 HTTP: 인증, 참여자 격리, 투표 수정, 서버 권한, 설�
   const kept = (await owner.request('/meetings', 'POST', input)).body.id;
   // A signed-in participant sees joined meetings, but unrelated meetings stay private.
   assert.deepEqual((await other.request('/meetings')).body, []);
-  await other.request(path + '/join', 'POST', {});
+  await other.request(path + '/join', 'POST', {name:'다른 주최자'});
   const participantList = (await other.request('/meetings')).body;
   assert.deepEqual(participantList.map(m => [m.id, m.isOwner]), [[mid, false]]);
   const ownerList = (await owner.request('/meetings')).body;

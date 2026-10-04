@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { openStore } from './store.js';
 import { openPostgres } from './postgres.js';
 import { fail, string, meetingInput, placeInput } from './validation.js';
-import { allowedSlots, calculate, datesBetween } from '../shared/time.js';
+import { allowedSlots, calculate, meetingDates } from '../shared/time.js';
 const scrypt = promisify(scryptCallback);
 const token = () => randomBytes(32).toString('base64url');
 const hash = s => createHash('sha256').update(s).digest('hex');
@@ -175,13 +175,11 @@ export function createApp({
       action
     } = req.params;
     if (!['register', 'login'].includes(action)) fail('잘못된 요청입니다.', 404);
-    const email = string(req.body.email, '이메일', 254, true).toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fail('올바른 이메일 주소를 입력해 주세요.');
-    const password = string(req.body.password, '비밀번호', 128, true);
-    if (password.length < 10) fail('비밀번호는 10자 이상 입력해 주세요.');
+    const email = string(req.body.email, '아이디', 254, true).toLowerCase();
+    const password = string(req.body.password, '비밀번호', 131072, true);
     let user = await db.prepare('SELECT * FROM users WHERE email=?').get(email);
     if (action === 'register') {
-      if (user) fail('이미 등록된 이메일입니다. 로그인해 주세요.', 409);
+      if (user) fail('이미 등록된 아이디입니다. 로그인해 주세요.', 409);
       const name = string(req.body.name, '이름', 40, true),
         salt = token();
       const key = await scrypt(password, salt, 64);
@@ -193,13 +191,13 @@ export function createApp({
       try {
         await db.prepare('INSERT INTO users VALUES(?,?,?,?)').run(user.id, email, `${salt}:${key.toString('hex')}`, name);
       } catch (e) {
-        if (e.code?.includes('SQLITE') || e.code === '23505') fail('이미 등록된 이메일입니다.', 409);
+        if (e.code?.includes('SQLITE') || e.code === '23505') fail('이미 등록된 아이디입니다.', 409);
         throw e;
       }
     } else {
       const [salt, stored] = (user?.password || `${'0'.repeat(43)}:${'0'.repeat(128)}`).split(':');
       const key = await scrypt(password, salt, 64);
-      if (!timingSafeEqual(key, Buffer.from(stored, 'hex')) || !user) fail('이메일 또는 비밀번호가 올바르지 않습니다.', 401);
+      if (!timingSafeEqual(key, Buffer.from(stored, 'hex')) || !user) fail('아이디 또는 비밀번호가 올바르지 않습니다.', 401);
     }
     await db.prepare('DELETE FROM sessions WHERE expires<?').run(Date.now());
     if (req.cookies.mp_session) await db.prepare('DELETE FROM sessions WHERE hash=?').run(hash(req.cookies.mp_session));
@@ -222,13 +220,13 @@ export function createApp({
     });
   });
   app.get('/api/meetings', async (req, res) => {
-    const user = requireUser(req);
+    if (!req.identity) return res.json([]);
     const rows = await db.prepare(`SELECT m.* FROM meetings m WHERE m.owner=? OR EXISTS
-      (SELECT 1 FROM participants p WHERE p.meeting=m.id AND p.identity=?) ORDER BY m.rowid DESC`).all(user.id, `user:${user.id}`);
+      (SELECT 1 FROM participants p WHERE p.meeting=m.id AND p.identity=?) ORDER BY m.rowid DESC`).all(req.user?.id ?? null, req.identity);
     res.json(rows.map(row => ({
       ...JSON.parse(row.data),
       id: row.id,
-      isOwner: row.owner === user.id
+      isOwner: !!req.user && row.owner === req.user.id
     })));
   });
   app.post('/api/meetings', async (req, res) => {
@@ -329,12 +327,14 @@ export function createApp({
     const m = await getMeeting(req);
     const existing = req.identity && (await db.prepare('SELECT id FROM participants WHERE meeting=? AND identity=?').get(m.id, req.identity));
     if (!existing) await transaction(async () => {
-      req.body.name = req.user?.name || `참여자 ${(await db.prepare('SELECT COUNT(*) AS n FROM participants WHERE meeting=?').get(m.id)).n + 1}`;
+      req.body.name = req.body.name || (req.user?.id === m.owner ? req.user.name : '');
       await participant(req, res, m);
     });
-    res.json({
-      ok: true
-    });
+    if (existing && req.body.name !== undefined) {
+      const name = string(req.body.name, '참여자 이름', 40, true);
+      await db.prepare('UPDATE participants SET name=? WHERE id=?').run(name, existing.id);
+    }
+    res.json({ ok: true });
   }));
   app.patch('/api/meetings/:id/participants/me', meetingWrite(async (req, res) => {
     const m = await getMeeting(req),
@@ -367,7 +367,7 @@ export function createApp({
     requireOwner(req, m);
     checkRevision(req, m);
     const data = meetingInput(req.body);
-    const timeChanged = ['startDate', 'endDate', 'startMinute', 'endMinute', 'duration'].some(k => m[k] !== data[k]);
+    const timeChanged = JSON.stringify(meetingDates(m)) !== JSON.stringify(meetingDates(data)) || ['startDate', 'endDate', 'startMinute', 'endMinute', 'duration'].some(k => m[k] !== data[k]);
     const placeChanged = m.placeMode !== data.placeMode || JSON.stringify(m.directPlace) !== JSON.stringify(data.directPlace);
     const responseCount = (await db.prepare('SELECT COUNT(*) AS n FROM participants WHERE meeting=? AND slots IS NOT NULL').get(m.id)).n;
     if ((timeChanged || placeChanged) && responseCount && req.body.acknowledge !== true) fail('기존 응답과 확정 결과에 미치는 영향을 확인해 주세요.', 409);
@@ -402,7 +402,6 @@ export function createApp({
     checkRevision(req, m);
     if (m.placeMode !== 'together' || m.finalizedPlace) fail('현재 장소 후보를 추가할 수 없습니다.', 409);
     const p = placeInput(req.body.place || {});
-    if (!p.address) fail('주소 또는 지도 링크를 입력해 주세요.');
     if ((await db.prepare('SELECT COUNT(*) AS n FROM places WHERE meeting=?').get(m.id)).n >= 50) fail('장소 후보는 최대 50개까지 추가할 수 있습니다.');
     await transaction(async () => {
       const author = await participant(req, res, m);
@@ -421,7 +420,6 @@ export function createApp({
     const mine = req.identity && (await db.prepare('SELECT id FROM participants WHERE meeting=? AND identity=?').get(m.id, req.identity));
     if (!mine || p.creator !== mine.id) fail('이 후보를 추가한 사람만 수정하거나 삭제할 수 있어요.', 403);
     const next = method === 'patch' ? placeInput(req.body.place || {}) : null;
-    if (next && !next.address) fail('주소 또는 지도 링크를 입력해 주세요.');
     await transaction(async () => {
       if (next) await db.prepare('UPDATE places SET name=?,address=?,note=? WHERE id=?').run(next.name, next.address, next.note, p.id);else {
         await db.prepare('DELETE FROM votes WHERE place=?').run(p.id);
@@ -456,7 +454,7 @@ export function createApp({
         date,
         start
       } = req.body;
-      if (!datesBetween(m.startDate, m.endDate).includes(date) || !Number.isInteger(start) || start % 30 || start < m.startMinute || start >= m.endMinute || m.duration !== null && start + m.duration > m.endMinute) fail('확정할 시작 시간을 다시 확인해 주세요.');
+      if (!meetingDates(m).includes(date) || !Number.isInteger(start) || start % 30 || start < m.startMinute || start >= m.endMinute || m.duration !== null && start + m.duration > m.endMinute) fail('확정할 시작 시간을 다시 확인해 주세요.');
       m.finalizedTime = {
         date,
         start,
