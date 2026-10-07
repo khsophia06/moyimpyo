@@ -58,10 +58,10 @@ function ShareSheet({ meeting, close }) {
     <div className="share-handle" aria-hidden="true"/>
     <header className="share-heading"><div><h2 id="share-title">공유</h2><p>{meeting.title}</p></div><button type="button" className="icon-button" aria-label="공유창 닫기" onClick={close}><X size={24}/></button></header>
     <div className="share-options">
-      <button type="button" onClick={kakao} disabled={!ready}><span className="share-circle kakao-circle"><ChatCircle weight="fill" size={29}/></span><span>카톡 공유</span></button>
-      <button type="button" onClick={() => copy(true)}><span className="share-circle instagram-circle"><InstagramLogo size={30}/></span><span>인스타 공유</span></button>
-      <a href={`mailto:?subject=${encodeURIComponent(`[모임표] ${meeting.title} 초대`)}&body=${encodeURIComponent(text)}`}><span className="share-circle mail-circle"><EnvelopeSimple size={29}/></span><span>메일 공유</span></a>
-      <a href={sms}><span className="share-circle sms-circle"><ChatCircle weight="fill" size={29}/></span><span>메시지 공유</span></a>
+      <button type="button" onClick={kakao} disabled={!ready}><span className="share-circle kakao-circle"><ChatCircle weight="fill" size={29}/></span><span>카카오톡</span></button>
+      <button type="button" onClick={() => copy(true)}><span className="share-circle instagram-circle"><InstagramLogo size={30}/></span><span>인스타</span></button>
+      <a href={`mailto:?subject=${encodeURIComponent(`[모임표] ${meeting.title} 초대`)}&body=${encodeURIComponent(text)}`}><span className="share-circle mail-circle"><EnvelopeSimple size={29}/></span><span>메일</span></a>
+      <a href={sms}><span className="share-circle sms-circle"><ChatCircle weight="fill" size={29}/></span><span>메시지</span></a>
     </div>
     <button type="button" className="share-copy" onClick={() => copy()}><span className="share-circle"><Copy size={26}/></span>링크 복사</button>
     <div className="share-details"><Notice>{message}</Notice><Notice error>{error}</Notice>{error && !ready && <button type="button" className="text-link" onClick={prepare}>카카오톡 다시 불러오기</button>}{instagram && <a className="text-link" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">인스타그램 열기</a>}<label className="sr-only" htmlFor="share-url">모임 초대 링크</label><input ref={linkRef} id="share-url" readOnly value={url} onFocus={e => e.target.select()}/>{local && <p className="small muted">로컬 미리보기 링크는 이 컴퓨터에서만 열 수 있어요.</p>}</div>

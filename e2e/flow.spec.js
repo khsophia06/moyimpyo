@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 test('주최자와 별도 모바일 브라우저: 생성, 드래그, 응답 수정, 투표, 독립 확정', async ({ page, browser }) => {
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   await page.clock.setFixedTime(new Date('2026-10-03T03:00:00Z'));
-  await page.goto('/'); await expect(page.getByRole('heading', { name: '언제 볼까요? 여기서 맞춰요.' })).toBeVisible();
+  await page.goto('/'); await expect(page.getByRole('heading', { name: '쉬운 약속 정하기 클릭 한번에-!' })).toBeVisible();
   await page.screenshot({ path: 'test-results/home-desktop.png', fullPage: true });
   await page.getByRole('link', { name: '새 모임 만들기' }).click();
   await page.getByRole('button', { name: '처음 오셨나요? 계정 만들기' }).click();
@@ -42,7 +42,7 @@ test('주최자와 별도 모바일 브라우저: 생성, 드래그, 응답 수�
   await guest.getByRole('link',{name:'장소',exact:true}).click();
   await guest.getByRole('button',{name:'장소 후보 추가'}).click();
   await guest.getByLabel('장소 이름',{exact:true}).fill('연남동 작은 식탁');
-  await guest.getByLabel('주소 또는 지도 링크').fill('서울 마포구 연남동');
+  await guest.getByRole('checkbox', {name:'지도 링크 만들기'}).check();
   await guest.getByLabel('짧은 설명').fill('이야기 나누기 좋은 조용한 곳');
   await guest.getByRole('button',{name:'후보 추가하기'}).click();
   await guest.getByRole('checkbox',{name:'연남동 작은 식탁 선택'}).check();

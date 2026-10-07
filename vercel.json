@@ -7,6 +7,6 @@
   "functions": { "api/index.js": { "maxDuration": 30, "includeFiles": "server/supabase-ca.crt" } },
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/index" },
-    { "source": "/((?!api(?:/|$)|assets(?:/|$)).*)", "destination": "/index.html" }
+    { "source": "/((?!api(?:/|$)|assets(?:/|$)|fonts(?:/|$)).*)", "destination": "/index.html" }
   ]
 }
