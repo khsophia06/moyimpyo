@@ -5,9 +5,9 @@ export function string(value, label, max, required = false) {
   return value.trim();
 }
 export function placeInput(b) {
-  const name = string(b.name, '장소 이름', 100, true), address = string(b.address ?? '', '주소 또는 지도 링크', 500), note = string(b.note ?? '', '설명', 300);
+  const name = string(b.name, '장소 이름', 100, true), address = string(b.address ?? '', '주소 또는 지도 링크', 2000), note = string(b.note ?? '', '설명', 300);
   if (/^[a-z][a-z0-9+.-]*:/i.test(address) && !/^https?:\/\//i.test(address)) fail('지도 링크는 http 또는 https 주소를 사용해 주세요.');
-  const mapUrl = string(b.mapUrl ?? '', '지도 링크', 500);
+  const mapUrl = string(b.mapUrl ?? '', '지도 링크', 2000);
   if (mapUrl && !/^https?:\/\//i.test(mapUrl)) fail('지도 링크는 http 또는 https 주소를 사용해 주세요.');
   return { name, address, note, ...(mapUrl ? { mapUrl } : {}) };
 }
