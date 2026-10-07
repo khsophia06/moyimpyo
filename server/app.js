@@ -417,7 +417,7 @@ export function createApp({
     if ((await db.prepare('SELECT COUNT(*) AS n FROM places WHERE meeting=?').get(m.id)).n >= 50) fail('장소 후보는 최대 50개까지 추가할 수 있습니다.');
     await transaction(async () => {
       const author = await participant(req, res, m);
-      await db.prepare('INSERT INTO places(id,meeting,name,address,note,creator) VALUES(?,?,?,?,?,?)').run(id(), m.id, p.name, p.address, p.note, author.id);
+      await db.prepare('INSERT INTO places(id,meeting,name,address,note,creator,generate_map) VALUES(?,?,?,?,?,?,?)').run(id(), m.id, p.name, p.address, p.note, author.id, p.generate_map);
     });
     res.status(201).json({
       ok: true
@@ -433,7 +433,7 @@ export function createApp({
     if (!mine || p.creator !== mine.id) fail('이 후보를 추가한 사람만 수정하거나 삭제할 수 있어요.', 403);
     const next = method === 'patch' ? placeInput(req.body.place || {}) : null;
     await transaction(async () => {
-      if (next) await db.prepare('UPDATE places SET name=?,address=?,note=? WHERE id=?').run(next.name, next.address, next.note, p.id);else {
+      if (next) await db.prepare('UPDATE places SET name=?,address=?,note=?,generate_map=? WHERE id=?').run(next.name, next.address, next.note, next.generate_map, p.id);else {
         await db.prepare('DELETE FROM votes WHERE place=?').run(p.id);
         await db.prepare('DELETE FROM places WHERE id=?').run(p.id);
       }
@@ -480,6 +480,7 @@ export function createApp({
         name: p.name,
         address: p.address,
         note: p.note,
+        generate_map: p.generate_map,
         id: p.id
       };
     } else fail('잘못된 요청입니다.', 404);

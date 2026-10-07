@@ -13,4 +13,5 @@ REVOKE ALL ON ALL SEQUENCES IN SCHEMA moimpyo FROM PUBLIC, anon, authenticated;
 CREATE INDEX IF NOT EXISTS participants_meeting_idx ON moimpyo.participants(meeting);
 CREATE INDEX IF NOT EXISTS places_meeting_idx ON moimpyo.places(meeting);
 CREATE INDEX IF NOT EXISTS votes_place_idx ON moimpyo.votes(place);
+ALTER TABLE moimpyo.places ADD COLUMN IF NOT EXISTS generate_map INTEGER NOT NULL DEFAULT 0;
 COMMIT;

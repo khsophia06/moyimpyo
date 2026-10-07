@@ -5,6 +5,7 @@ import { Button, Notice } from './ui';
 export function PlaceMap({ meeting }) {
   const address = meeting.finalizedPlace?.address?.trim();
   const [point, setPoint] = useState(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
+  if (!meeting.finalizedPlace?.generate_map) return null;
   if (!address) return <div className="place-map"><p className="small muted">주소가 아직 등록되지 않았어요. 주최자가 주소를 추가하면 지도와 주소 링크를 확인할 수 있어요.</p></div>;
   if (/^https?:\/\//i.test(address)) return <div className="place-map"><p className="small muted">위의 지도 링크에서 위치를 확인하세요. 도로명 주소를 입력하면 이 페이지에서도 지도를 볼 수 있어요.</p></div>;
   const bbox = point && [point.lon-.006,point.lat-.004,point.lon+.006,point.lat+.004].join(',');

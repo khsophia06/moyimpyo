@@ -9,7 +9,7 @@ export function placeInput(b) {
   if (/^[a-z][a-z0-9+.-]*:/i.test(address) && !/^https?:\/\//i.test(address)) fail('지도 링크는 http 또는 https 주소를 사용해 주세요.');
   const mapUrl = string(b.mapUrl ?? '', '지도 링크', 2000);
   if (mapUrl && !/^https?:\/\//i.test(mapUrl)) fail('지도 링크는 http 또는 https 주소를 사용해 주세요.');
-  return { name, address, note, ...(mapUrl ? { mapUrl } : {}) };
+  return { name, address, note, generate_map: b.generate_map === true || b.generate_map === 1 ? 1 : 0, ...(mapUrl ? { mapUrl } : {}) };
 }
 export function meetingInput(b) {
   const title = string(b.title, '모임 이름', 100, true), description = string(b.description ?? '', '설명', 1000);
