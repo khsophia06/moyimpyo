@@ -23,6 +23,12 @@ test('주최자와 별도 모바일 브라우저: 생성, 드래그, 응답 수�
   await page.screenshot({ path:'test-results/meeting-empty-desktop.png', fullPage:true });
   await page.getByRole('link', { name:'시간 정하기' }).click();
   await expect(page.getByRole('button', { name:'전체 현황', exact:true })).toHaveAttribute('aria-pressed','true');
+  await page.getByRole('button',{name:'참여자별 보기',exact:true}).click();
+  await expect(page.locator('.member-picker').getByRole('button',{name:'지수',exact:true})).toBeVisible();
+  await page.locator('[data-slot="2026-10-09/960"]').click();
+  await expect(page.locator('[data-slot="2026-10-09/960"]')).toHaveAttribute('aria-pressed','true');
+  await page.locator('[data-slot="2026-10-09/960"]').click();
+  await page.getByRole('button',{name:'전체 현황',exact:true}).click();
   const first = page.locator('[data-slot="2026-10-09/840"]'), last = page.locator('[data-slot="2026-10-09/930"]');
   await last.scrollIntoViewIfNeeded();
   const a = await first.boundingBox(), b = await last.boundingBox();

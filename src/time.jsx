@@ -52,7 +52,8 @@ export function TimeView({ data: d, user, reload, ask }) {
   const columnTemplate = '48px ' + columns.map(date => date ? 'minmax(0, 120px)' : '12px').join(' ');
   const times = Array.from({ length: (m.endMinute - m.startMinute) / 30 }, (_, i) => m.startMinute + i * 30);
   const groups = useMemo(() => recommendationGroups(m, responses, result), [m, responses, result]);
-  const member = d.responses[memberIndex], selfMember = !!d.mine && member?.id === d.mine.id, memberSlots = selfMember ? selected : new Set(member?.slots || []);
+  const memberOptions = d.mine ? [d.mine, ...d.responses.filter(r=>r.id !== d.mine.id)] : d.responses;
+  const member = memberOptions[memberIndex], selfMember = !!d.mine && member?.id === d.mine.id, memberSlots = selfMember ? selected : new Set(member?.slots || []);
   const confirming = mode === 'confirm';
   const switchMode = next => { drag.current = null; setMode(next); setChoosing(false); setChoice(null); setRecommendationsOpen(false); setDetail(''); setError(''); };
   const editable = mode === 'all' || (mode === 'members' && selfMember);
@@ -105,7 +106,7 @@ export function TimeView({ data: d, user, reload, ask }) {
       <button className="text-link refresh-availability" aria-label="현황 새로고침" disabled={busy} onClick={async () => { setError(''); try { await reload(); setMessage('최신 응답을 불러왔어요.'); } catch (e) { setError(e.message); } }}><ArrowClockwise/><span>현황 새로고침</span></button>
     </div>
     <div className="time-controls">
-      {mode === 'members' && <div className="member-picker" aria-label="팀원 선택">{d.responses.length ? d.responses.map((r, i) => <button key={i} type="button" aria-pressed={i === memberIndex} onClick={() => { setMemberIndex(i); setDetail(''); }}>{r.name}{d.responses.filter(p => p.name === r.name).length > 1 ? ` · ${i + 1}` : ''}</button>) : <p className="muted">아직 응답한 팀원이 없어요.</p>}</div>}
+      {mode === 'members' && <div className="member-picker" aria-label="팀원 선택">{memberOptions.length ? memberOptions.map((r, i) => <button key={i} type="button" aria-pressed={i === memberIndex} onClick={() => { setMemberIndex(i); setDetail(''); }}>{r.name}{memberOptions.filter(p => p.name === r.name).length > 1 ? ` · ${i + 1}` : ''}</button>) : <p className="muted">아직 응답한 팀원이 없어요.</p>}</div>}
       {d.mine?.revision < m.timeRevision && <Notice>모임의 시간 설정이 바뀌었어요. 기존 응답을 확인하고 가능한 시간을 다시 선택해 주세요.</Notice>}
       <div className="grid-tools">
         {mode === 'all' ? <div className="legend"><span>0명</span>{Array.from({ length: Math.min(result.total, 4) + 1 }, (_, i) => { const n = result.total === 0 ? 0 : Math.round(i * result.total / Math.min(result.total, 4)); return <i key={i} title={`${n}명 가능`} style={{ background: heat(n, result.total) }}/>; })}<span>{result.total}명</span><span className="mine-legend">✓ 내 응답</span>{choosing && activeChoice && <span className="selection-legend">노란색 · 확정 전 미리보기</span>}</div> : !confirming && <span className="small muted">{mode === 'members' ? `${member?.name || '팀원'} · 초록색: 가능한 시간` : '✓ 저장됨 · 점선: 저장 전 변경 · 드래그로 여러 칸 선택'}</span>}
