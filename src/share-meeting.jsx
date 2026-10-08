@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ShareNetwork, Copy, InstagramLogo, EnvelopeSimple, ChatCircle, X } from '@phosphor-icons/react';
+import { ShareNetwork, Copy, InstagramLogo, EnvelopeSimple, ChatCircle, X, Check } from '@phosphor-icons/react';
 import { Notice } from './ui';
 
 const key = import.meta.env.VITE_KAKAO_JS_KEY || 'aee7101db38ea291c390a4624ba68d43';
@@ -23,7 +23,7 @@ export function ShareMeeting({ meeting }) {
 }
 function ShareSheet({ meeting, close }) {
   const ref = useRef(null), linkRef = useRef(null);
-  const [message, setMessage] = useState(''), [error, setError] = useState(''), [ready, setReady] = useState(false), [instagram, setInstagram] = useState(false);
+  const [copied, setCopied] = useState(false), [message, setMessage] = useState(''), [error, setError] = useState(''), [ready, setReady] = useState(false), [instagram, setInstagram] = useState(false);
   const url = `${location.origin}/m/${meeting.id}`;
   const text = `${meeting.title}\n모임표에서 가능한 시간을 알려주세요.\n${url}`;
   const local = ['localhost','127.0.0.1'].includes(location.hostname);
@@ -36,10 +36,11 @@ function ShareSheet({ meeting, close }) {
     return () => { document.body.style.overflow = overflow; };
   }, []);
   const copy = async (forInstagram = false) => {
-    setError(''); setMessage(''); setInstagram(false);
+    setError(''); setCopied(false); setMessage(''); setInstagram(false);
     try {
       await navigator.clipboard.writeText(url);
-      setMessage(forInstagram ? '링크를 복사했어요. 인스타그램 DM에 붙여넣어 보내 주세요.' : '초대 링크를 복사했어요.');
+      setCopied(true);
+      setMessage(forInstagram ? '링크를 복사했어요. 인스타그램 DM에 붙여넣어 보내 주세요.' : '');
       setInstagram(forInstagram);
     } catch {
       linkRef.current.focus(); linkRef.current.select();
@@ -63,7 +64,7 @@ function ShareSheet({ meeting, close }) {
       <a href={`mailto:?subject=${encodeURIComponent(`[모임표] ${meeting.title} 초대`)}&body=${encodeURIComponent(text)}`}><span className="share-circle mail-circle"><EnvelopeSimple size={29}/></span><span>메일</span></a>
       <a href={sms}><span className="share-circle sms-circle"><ChatCircle weight="fill" size={29}/></span><span>메시지</span></a>
     </div>
-    <button type="button" className="share-copy" onClick={() => copy()}><span className="share-circle"><Copy size={26}/></span>링크 복사</button>
+    <button type="button" className="share-copy" onClick={() => copy()}><span className="share-circle"><Copy size={26}/></span>링크 복사{copied && <span role="status" aria-label="링크 복사 완료" className="share-copy-check"><Check size={20} weight="bold" aria-hidden="true"/></span>}</button>
     <div className="share-details"><Notice>{message}</Notice><Notice error>{error}</Notice>{error && !ready && <button type="button" className="text-link" onClick={prepare}>카카오톡 다시 불러오기</button>}{instagram && <a className="text-link" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">인스타그램 열기</a>}<label className="sr-only" htmlFor="share-url">모임 초대 링크</label><input ref={linkRef} id="share-url" readOnly value={url} onFocus={e => e.target.select()}/>{local && <p className="small muted">로컬 미리보기 링크는 이 컴퓨터에서만 열 수 있어요.</p>}</div>
   </dialog>;
 }
