@@ -38,7 +38,9 @@ body:has(.time-focused-page) .site-header{height:92px}
 .redesigned-time .grid-tools{margin-top:0;align-items:flex-start;padding-top:12px}
 .redesigned-time .grid-scroll{height:auto;max-height:none;padding:46px 0;overflow-x:auto;overflow-y:hidden;background:#fafbf8;display:flex;justify-content:center}
 .redesigned-time .time-grid{height:var(--grid-height);width:max-content;flex-shrink:0;max-width:100%;margin:0 12px}
-.redesigned-time .candidate-panel{margin-top:67px;gap:12px}
+.redesigned-time .time-controls{width:calc(100% - 324px);min-width:0}
+.redesigned-time .candidate-panel{margin-top:0;gap:12px}
+.site-footer>span:last-child{margin-left:0}
 .redesigned-time .candidate-panel .time-work-mode{padding:22px;gap:0;min-height:87px}
 .redesigned-time .candidate-panel .time-work-mode:has(.sr-only){padding:20.5px 22px}
 .redesigned-time .candidate-panel .time-work-mode.choosing-mode{gap:16px}
@@ -55,7 +57,7 @@ body:has(.time-focused-page) .site-header{height:92px}
 .redesigned-time .recommendation-group summary{font-weight:400;font-size:15px}
 .share-copy{font-weight:700}.share-options{padding:28px 0}
 @media(min-width:768px){.share-sheet{inset:0;margin:auto;height:fit-content;min-height:411px}}
-@media(max-width:1100px){.intro h1{font-size:48px}.redesigned-time .time-layout{grid-template-columns:minmax(0,1fr) 270px}.redesigned-time .best-candidate{padding:18px}.redesigned-time .best-candidate>strong{font-size:21px}}
+@media(max-width:1100px){.intro h1{font-size:48px}.redesigned-time .time-layout{grid-template-columns:minmax(0,1fr) 270px}.redesigned-time .time-controls{width:calc(100% - 294px)}.redesigned-time .best-candidate{padding:18px}.redesigned-time .best-candidate>strong{font-size:21px}}
 @media(max-width:767px){
   body:has(.time-focused-page) .site-header{height:72px}
   .intro h1{font-size:clamp(32px,8.8vw,47px);letter-spacing:-1.5px}.intro .eyebrow{font-size:14px}
@@ -67,6 +69,7 @@ body:has(.time-focused-page) .site-header{height:92px}
   .time-focused-page .meeting-heading{min-height:0;padding-bottom:26px}.time-focused-page .meeting-heading h1{font-size:32px;line-height:1.3;letter-spacing:-1.6px}
   .time-focused-page .meeting-meta{font-size:14px;min-height:48px}.time-instructions{font-size:14px;line-height:23px}
   .redesigned-time .time-layout{grid-template-columns:1fr}.redesigned-time .candidate-panel{margin-top:0;gap:12px}
+  .redesigned-time .time-controls{width:100%}
   .redesigned-time .grid-scroll{padding:16px 0}.redesigned-time .time-grid{margin:0 4px}
   .redesigned-time .view-toolbar{align-items:flex-start;gap:6px}.redesigned-time .view-toolbar>.text-link{font-size:11px}
   .redesigned-time .best-candidate>strong{font-size:23px}.redesigned-time .best-candidate{padding:24px}
