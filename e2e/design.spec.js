@@ -4,7 +4,7 @@ import { calculate } from '../shared/time.js';
 const user = {id:'host',name:'가현'};
 const meeting = {id:'figma-review',title:'디자인 회의',description:'팀원과 디자인을 검토해요.',dates:['2026-10-12','2026-10-13','2026-10-14','2026-10-15','2026-10-16'],startDate:'2026-10-12',endDate:'2026-10-16',startMinute:540,endMinute:1080,duration:120,placeMode:'together',revision:1,timeRevision:1,finalizedTime:null,finalizedPlace:null};
 const responses = ['가현','민지','지훈','수빈'].map((name,i)=>({id:`person-${i}`,name,revision:1,slots:meeting.dates.flatMap((date,d)=>Array.from({length:4},(_,j)=>`${date}/${600+j*30+(d%2)*60}`))}));
-const data = {meeting,isOwner:true,mine:responses[0],responses,result:calculate(meeting,responses),places:[],participants:responses};
+const data = {meeting,isOwner:true,mine:responses[0],responses,result:calculate(meeting,responses),places:[],myVotes:[],participants:responses};
 async function mock(page,{signedIn=true,guest=false,loading=null}={}) {
   await page.route('**/api/**',async route=>{
     const path = new URL(route.request().url()).pathname;
@@ -48,4 +48,11 @@ test('시간 화면: 추천, 주최자 권한, 반응형 시간표와 공유 링
   await page.unroute('**/api/**');await mock(page,{signedIn:false});await page.route('**/api/meetings/figma-review',route=>route.fulfill({json:{...data,isOwner:false,mine:responses[1]}}));
   await page.reload();await expect(page.getByRole('heading',{name:'추천 시간'})).toBeVisible();
   await expect(page.getByRole('button',{name:'모임 시간 정하기'})).toHaveCount(0);
+  await page.goto('/m/figma-review');
+  await expect(page.locator('.meeting-heading .meeting-description')).toHaveText(meeting.description);
+  await page.locator('.response-section').getByRole('button',{name:'공유',exact:true}).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByRole('button',{name:'공유창 닫기'}).click();
+  await page.getByRole('link',{name:'장소',exact:true}).click();
+  await expect(page.locator('.meeting-heading .time-instructions')).toHaveText('원하는 장소를 추천하고 투표해주세요');
 });
