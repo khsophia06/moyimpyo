@@ -67,3 +67,19 @@ test('시간 화면: 추천, 주최자 권한, 반응형 시간표와 공유 링
   await page.getByRole('link',{name:'장소',exact:true}).click();
   await expect(page.locator('.meeting-heading .time-instructions')).toHaveText('원하는 장소를 추천하고 투표해주세요');
 });
+
+test('장소 카드: 데스크톱과 모바일 선택 상태 및 메뉴',async({page})=>{
+  await mock(page);
+  await page.route('**/api/meetings/figma-review',route=>route.fulfill({json:{...data,myVotes:['one'],places:[{id:'one',name:'국민대 조형관',count:4,canEdit:true,generate_map:true},{id:'two',name:'서울역',count:0,canEdit:true,generate_map:true},{id:'three',name:'모임표',count:0,canEdit:true,address:'https://moyimpyo.vercel.app/m/figma-review'}]}}));
+  await page.goto('/m/figma-review/place');
+  await expect(page.locator('.place-row.voted')).toHaveCount(1);
+  await page.getByRole('checkbox',{name:'서울역 선택'}).check();
+  await expect(page.locator('.place-save-status')).toContainText('2곳 선택함');
+  await page.getByLabel('서울역 더보기').click();
+  await expect(page.getByRole('button',{name:'이 장소 확정'})).toBeVisible();
+  await page.getByLabel('서울역 더보기').click();
+  await capture(page,'place-cards-desktop');
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+  await capture(page,'place-cards-mobile');
+});

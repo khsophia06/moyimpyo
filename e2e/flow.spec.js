@@ -67,7 +67,7 @@ test('주최자와 별도 모바일 브라우저: 생성, 드래그, 응답 수�
   await expect(page.locator('.confirmation-cell.final-interval')).toHaveCount(4);
   await expect(page.locator('[data-slot="2026-10-09/840"]')).toHaveCSS('background-color','rgb(255, 225, 106)');
   await page.getByRole('link',{name:'모임 홈',exact:true}).click(); await expect(page.getByText('시간 확정',{exact:true})).toBeVisible(); await expect(page.getByText('장소 정하는 중',{exact:true})).toBeVisible();
-  await page.getByRole('link',{name:'장소',exact:true}).click(); await page.getByRole('button',{name:'이 장소 확정'}).click(); await page.getByRole('button',{name:'확인하고 저장'}).click();
+  await page.getByRole('link',{name:'장소',exact:true}).click(); await page.getByLabel('연남동 작은 식탁 더보기').click(); await page.getByRole('button',{name:'이 장소 확정'}).click(); await page.getByRole('button',{name:'확인하고 저장'}).click();
   await guest.goto(url); await expect(guest.getByText('장소 확정',{exact:true})).toBeVisible(); await expect(guest.getByText('시간 확정',{exact:true})).toBeVisible();
   await guest.screenshot({path:'test-results/final-mobile.png',fullPage:true});
   await guest.goto('/m/not-a-real-link'); await expect(guest.getByRole('heading',{name:'모임을 불러오지 못했어요.'})).toBeVisible();
