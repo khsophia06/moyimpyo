@@ -36,7 +36,7 @@ test('공통 화면: 홈, 폼, 인증, 초대, 로딩과 공유',async({page})=>
 });
 test('시간 화면: 추천, 주최자 권한, 반응형 시간표와 공유 링크',async({page})=>{
   await mock(page);await page.goto('/m/figma-review/time');await page.setViewportSize({width:1280,height:1000});
-  await expect(page.getByRole('heading',{name:'추천 시간'})).toBeVisible();await capture(page,'12-recommendations');
+  await page.getByRole('button',{name:'시간 확정하기',exact:true}).click();await expect(page.getByRole('heading',{name:'추천 시간'})).toBeVisible();await capture(page,'12-recommendations');
   await expect(page.locator('.best-candidate')).toContainText('4/4명');
   await page.route('https://t1.kakaocdn.net/**',route=>route.fulfill({contentType:'application/javascript',body:'window.Kakao={isInitialized:()=>true,Share:{sendDefault:()=>{}}};'}));
   await page.getByRole('button',{name:'공유',exact:true}).click();await expect(page.getByRole('dialog')).toBeVisible();
@@ -53,7 +53,7 @@ test('시간 화면: 추천, 주최자 권한, 반응형 시간표와 공유 링
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog',{name:'추천 시간'})).toHaveCount(0);
   await page.unroute('**/api/**');await mock(page,{signedIn:false});await page.route('**/api/meetings/figma-review',route=>route.fulfill({json:{...data,isOwner:false,mine:responses[1]}}));
-  await page.reload();await page.getByRole('button',{name:'전체 보기'}).click();await expect(page.getByRole('heading',{name:'추천 시간'})).toBeVisible();
+  await page.reload();await expect(page.locator('.mobile-time-action')).toHaveCount(0);await page.getByRole('button',{name:'추천시간 보기',exact:true}).click();await page.getByRole('button',{name:'전체 보기'}).click();await expect(page.getByRole('heading',{name:'추천 시간'})).toBeVisible();
   await expect(page.getByRole('button',{name:'모임 시간 정하기'})).toHaveCount(0);
   await page.goto('/m/figma-review');
   await expect(page.locator('.meeting-heading .meeting-description')).toHaveText(meeting.description);

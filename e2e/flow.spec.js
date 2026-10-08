@@ -50,9 +50,15 @@ test('주최자와 별도 모바일 브라우저: 생성, 드래그, 응답 수�
   await guest.getByRole('checkbox',{name:'연남동 작은 식탁 선택'}).uncheck(); await guest.getByRole('button',{name:'내 투표 저장'}).click(); await expect(guest.getByText('현재 0명 투표')).toBeVisible();
   await guest.getByRole('checkbox',{name:'연남동 작은 식탁 선택'}).check(); await guest.getByRole('button',{name:'내 투표 저장'}).click(); await expect(guest.getByText('현재 1명 투표')).toBeVisible();
   await page.getByRole('button',{name:'전체 현황',exact:true}).click(); await page.getByRole('button',{name:'현황 새로고침'}).click();
+  await page.getByRole('button',{name:'참여자별 보기',exact:true}).click();
+  await page.locator('.member-picker').getByRole('button',{name:'지수',exact:true}).click();
+  await page.locator('[data-slot="2026-10-09/960"]').click();
+  await expect(page.locator('[data-slot="2026-10-09/960"]')).toHaveAttribute('aria-pressed','true');
+  await page.getByRole('button',{name:'시간 확정하기',exact:true}).click();
+  await expect(page.locator('.legend')).toHaveCount(0);
+  await expect(page.locator('.time-work-mode')).toHaveCount(0);
   await page.locator('[data-recommendation="all"] summary').click();
   await expect(page.locator('[data-recommendation="all"] .candidate').first()).toBeVisible();
-  await page.getByRole('button',{name:'모임 시간 정하기',exact:true}).click();
   await page.locator('[data-slot="2026-10-09/840"]').click(); await expect(page.locator('.chosen-time')).toContainText('2 / 2명');
   await page.screenshot({path:'test-results/time-desktop.png',fullPage:true});
   await expect(page.locator('.confirmation-cell')).toHaveCount(4);

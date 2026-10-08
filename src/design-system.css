@@ -104,3 +104,6 @@ body:has(.meeting-detail-page) .site-header{height:92px}
 
 .mobile-people-avatars{display:none}
 @media(max-width:767px){.mobile-people-avatars{display:inline-flex;margin-right:8px;vertical-align:middle}.mobile-people-avatars i{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#276b50;color:white;font-style:normal;font-size:11px;border:1px solid white;margin-left:-3px}.mobile-people-avatars i:nth-child(2n){background:#64b991}.mobile-recommended-cell.recommendation-start{border-top:3px solid #e8b521}.mobile-recommended-cell.recommendation-end{border-bottom:3px solid #e8b521}}
+
+.redesigned-time.response-view .time-layout{grid-template-columns:1fr}.redesigned-time.response-view{padding-bottom:0}
+@media(max-width:767px){.redesigned-time .segmented{grid-template-columns:repeat(3,minmax(0,1fr));width:100%}.redesigned-time .segmented button{font-size:12px;padding:12px 4px;min-width:0}.redesigned-time .grid-tools:has(.mobile-recommendation-strip){grid-template-columns:1fr}.redesigned-time .confirmation-view .mine-legend{display:none}}
