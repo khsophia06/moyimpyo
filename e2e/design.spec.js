@@ -91,10 +91,9 @@ test('모임 홈 현황판: 요약, 응답 진행률, 관리와 초대 링크',a
   await expect(page.locator('.home-status-summary').first()).toContainText('4/4명 가능');
   await expect(page.locator('.home-status-summary').last()).toContainText('유니클로 목동점');
   await expect(page.locator('.response-progress-label')).toHaveText('4명 중 3명 응답');
-  await context.grantPermissions(['clipboard-read','clipboard-write']);
-  await page.getByRole('button',{name:'미응답자에게 보낼 링크 복사'}).click();
-  await expect(page.getByRole('button',{name:'초대 링크 복사 완료'})).toBeVisible();
-  expect(await page.evaluate(()=>navigator.clipboard.readText())).toContain('/m/figma-review');
+  await page.locator('.participant-heading').getByRole('button',{name:'공유',exact:true}).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByRole('button',{name:'공유창 닫기'}).click();
   await page.getByLabel('가현 관리').click();
   await expect(page.getByRole('button',{name:'이름 수정'})).toBeVisible();
   await page.getByLabel('가현 관리').click();
