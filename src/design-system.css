@@ -95,3 +95,4 @@ body:has(.meeting-detail-page) .site-header{height:92px}
 @media(max-width:767px){.redesigned-time .grid-tools .legend{display:flex;flex-wrap:wrap}.redesigned-time .grid-tools .legend .mine-legend{margin-left:auto!important}.redesigned-time .grid-tools .legend{box-sizing:border-box}}
 .promise-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:23px}.promise-heading h2{font-size:19px;margin:0}.promise-heading>.text-link{flex-shrink:0}
 .home-main>.promise-heading{grid-column:1/-1;margin:0}
+@layer base{@media(max-width:767px){.redesigned-time .grid-tools .legend .mine-legend{margin-left:auto!important}}}
