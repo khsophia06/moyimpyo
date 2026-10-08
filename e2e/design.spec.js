@@ -45,8 +45,15 @@ test('시간 화면: 추천, 주최자 권한, 반응형 시간표와 공유 링
   await capture(page,'17-share');await page.getByRole('button',{name:'공유창 닫기'}).click();
   await page.setViewportSize({width:390,height:844});await capture(page,'12-mobile');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+  await expect(page.locator('.refresh-availability')).toBeHidden();
+  await expect(page.locator('.mobile-time-action')).toBeVisible();
+  await page.getByRole('button',{name:'전체 보기'}).click();
+  await expect(page.getByRole('dialog',{name:'추천 시간'})).toBeVisible();
+  await capture(page,'12-mobile-sheet');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog',{name:'추천 시간'})).toHaveCount(0);
   await page.unroute('**/api/**');await mock(page,{signedIn:false});await page.route('**/api/meetings/figma-review',route=>route.fulfill({json:{...data,isOwner:false,mine:responses[1]}}));
-  await page.reload();await expect(page.getByRole('heading',{name:'추천 시간'})).toBeVisible();
+  await page.reload();await page.getByRole('button',{name:'전체 보기'}).click();await expect(page.getByRole('heading',{name:'추천 시간'})).toBeVisible();
   await expect(page.getByRole('button',{name:'모임 시간 정하기'})).toHaveCount(0);
   await page.goto('/m/figma-review');
   await expect(page.locator('.meeting-heading .meeting-description')).toHaveText(meeting.description);

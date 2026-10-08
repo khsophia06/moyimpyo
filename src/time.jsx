@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, Fragment } from 'react';
-import { Check, ArrowClockwise, Bell, CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { Check, ArrowClockwise, Bell, CaretLeft, CaretRight, X } from '@phosphor-icons/react';
 import { useAvailability } from './useAvailability';
 import { Button, Notice, shortDate } from './ui';
 import { meetingDates, weekKey, datePages, clock, durationLabel, slotKey, calculate, recommendationGroups } from '../shared/time';
@@ -9,7 +9,7 @@ export function TimeView({ data: d, user, reload, ask }) {
   const [pageSize, setPageSize] = useState(() => matchMedia('(max-width: 767px)').matches ? 4 : 7);
   useEffect(() => {
     const media = matchMedia('(max-width: 767px)');
-    const update = () => { setPageSize(media.matches ? 4 : 7); setPage(0); };
+    const update = () => { setPageSize(media.matches ? 4 : 7); setPage(0); setRecommendationsOpen(false); };
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
@@ -20,6 +20,25 @@ export function TimeView({ data: d, user, reload, ask }) {
   const [error, setError] = useState(''), [message, setMessage] = useState('');
   const [detail, setDetail] = useState(''), [page, setPage] = useState(0), [memberIndex, setMemberIndex] = useState(0);
   const [choice, setChoice] = useState(null);
+  const [recommendationsOpen, setRecommendationsOpen] = useState(false), [mobileCandidate, setMobileCandidate] = useState(null);
+  const recommendationSheet = useRef(null);
+  useEffect(() => {
+    if (!recommendationsOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    recommendationSheet.current?.focus();
+    const escape = e => {
+      if (e.key === 'Escape') setRecommendationsOpen(false);
+      if (e.key === 'Tab') {
+        const items = [...(recommendationSheet.current?.querySelectorAll('button:not(:disabled), summary, [href]') || [])].filter(el => el.getClientRects().length);
+        const first = items[0], last = items.at(-1);
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === recommendationSheet.current)) { e.preventDefault(); last?.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
+    };
+    addEventListener('keydown', escape);
+    return () => { document.body.style.overflow = previous; removeEventListener('keydown', escape); };
+  }, [recommendationsOpen]);
   const drag = useRef(null), grid = useRef(null);
   const responses = useMemo(() => {
     if (!availability.edited) return d.responses;
@@ -41,11 +60,14 @@ export function TimeView({ data: d, user, reload, ask }) {
   const shortChoice = choosing && choice && choiceDuration < (m.duration || 30);
   const previewCandidate = candidate => {
     if (!d.isOwner || busy || availability.error) return;
-    beginChoice(); setChoice({date:candidate.date,start:candidate.start,end:candidate.end});
+    setRecommendationsOpen(false); beginChoice(); setChoice({date:candidate.date,start:candidate.start,end:candidate.end});
     setPage(Math.max(0, pages.findIndex(dates => dates.includes(candidate.date))));
     grid.current?.scrollIntoView({block:'center',behavior:'smooth'});
   };
   const best = groups.all[0] || groups.some[0];
+  const mobileSuggestions = [...groups.all, ...groups.some, ...groups.short].filter((c,i,list)=>list.findIndex(p=>p.date===c.date && p.start===c.start && p.end===c.end)===i).slice(0,3);
+  const highlighted = [...groups.all, ...groups.some, ...groups.short].find(c => c.date === mobileCandidate?.date && c.start === mobileCandidate?.start && c.end === mobileCandidate?.end) || best;
+  const compactDate = date => `${Number(date.slice(5,7))}.${Number(date.slice(8))} ${new Intl.DateTimeFormat('ko-KR',{weekday:'short'}).format(new Date(date+'T12:00:00'))}`;
   const beginChoice = () => { if (!d.isOwner) return; drag.current = null; setMode('all'); setChoosing(true); setChoice(null); setError(''); };
   const cancelChoice = () => { setChoosing(false); setChoice(null); setError(''); };
   const choicePeople = activeChoice ? responses.filter(r => {
@@ -85,7 +107,7 @@ export function TimeView({ data: d, user, reload, ask }) {
       {d.mine?.revision < m.timeRevision && <Notice>모임의 시간 설정이 바뀌었어요. 기존 응답을 확인하고 가능한 시간을 다시 선택해 주세요.</Notice>}
       <div className="grid-tools">
         {mode === 'all' ? <div className="legend"><span>0명</span>{Array.from({ length: Math.min(result.total, 4) + 1 }, (_, i) => { const n = result.total === 0 ? 0 : Math.round(i * result.total / Math.min(result.total, 4)); return <i key={i} title={`${n}명 가능`} style={{ background: heat(n, result.total) }}/>; })}<span>{result.total}명</span><span className="mine-legend">✓ 내 응답</span>{choosing && activeChoice && <span className="selection-legend">노란색 · 확정 전 미리보기</span>}</div> : <span className="small muted">{mode === 'members' ? `${member?.name || '팀원'} · 초록색: 가능한 시간` : '✓ 저장됨 · 점선: 저장 전 변경 · 드래그로 여러 칸 선택'}</span>}
-        {pages.length > 1 && <div className="inline-actions week-navigation"><button className="small-button" disabled={page === 0} onClick={() => setPage(p => p - 1)} aria-label="이전"> <span className="desktop-page-label">이전</span><CaretLeft className="mobile-page-arrow"/></button><span className="small desktop-page-label">{page + 1} / {pages.length}</span><div className="mobile-date-navigation"><strong>{visibleDays.length ? `${Number(visibleDays[0].slice(5,7))}.${Number(visibleDays[0].slice(8))} ${new Intl.DateTimeFormat('ko-KR',{weekday:'short'}).format(new Date(visibleDays[0]+'T12:00:00'))} – ${Number(visibleDays.at(-1).slice(5,7))}.${Number(visibleDays.at(-1).slice(8))} ${new Intl.DateTimeFormat('ko-KR',{weekday:'short'}).format(new Date(visibleDays.at(-1)+'T12:00:00'))}` : ''}</strong><div className="date-page-dots" aria-label={`${page + 1} / ${pages.length}`}>{pages.map((_,i)=><i key={i} className={i===page ? 'active' : ''} aria-hidden="true"/>)}</div></div><button className="small-button" disabled={page + 1 >= pages.length} onClick={() => setPage(p => p + 1)} aria-label="다음"><span className="desktop-page-label">다음</span><CaretRight className="mobile-page-arrow"/></button></div>}
+        {!m.finalizedTime && !choosing && mobileSuggestions.length > 0 && <div className="mobile-recommendation-strip"><div><strong>추천 시간</strong><button type="button" className="text-link" onClick={() => setRecommendationsOpen(true)}>전체 보기 <CaretRight/></button></div><div className="recommendation-chips">{mobileSuggestions.map(c=><button type="button" key={`${c.date}/${c.start}`} aria-pressed={highlighted?.date===c.date && highlighted?.start===c.start} onClick={()=>{setMobileCandidate(c);setPage(Math.max(0,pages.findIndex(ds=>ds.includes(c.date))));}}>{compactDate(c.date)} {clock(c.start)}–{clock(c.end)} · {c.count}/{result.total}명</button>)}</div></div>}{pages.length > 1 && <div className="inline-actions week-navigation"><button className="small-button" disabled={page === 0} onClick={() => setPage(p => p - 1)} aria-label="이전"> <span className="desktop-page-label">이전</span><CaretLeft className="mobile-page-arrow"/></button><span className="small desktop-page-label">{page + 1} / {pages.length}</span><div className="mobile-date-navigation"><strong>{visibleDays.length ? `${Number(visibleDays[0].slice(5,7))}.${Number(visibleDays[0].slice(8))} ${new Intl.DateTimeFormat('ko-KR',{weekday:'short'}).format(new Date(visibleDays[0]+'T12:00:00'))} – ${Number(visibleDays.at(-1).slice(5,7))}.${Number(visibleDays.at(-1).slice(8))} ${new Intl.DateTimeFormat('ko-KR',{weekday:'short'}).format(new Date(visibleDays.at(-1)+'T12:00:00'))}` : ''}</strong><div className="date-page-dots" aria-label={`${page + 1} / ${pages.length}`}>{pages.map((_,i)=><i key={i} className={i===page ? 'active' : ''} aria-hidden="true"/>)}</div></div><button className="small-button" disabled={page + 1 >= pages.length} onClick={() => setPage(p => p + 1)} aria-label="다음"><span className="desktop-page-label">다음</span><CaretRight className="mobile-page-arrow"/></button></div>}
       </div>
       </div><div className="time-layout"><section className="timetable-section"><div className="grid-scroll" ref={grid} style={{ '--grid-height': `${60 + times.length * 26}px` }}><div className="time-grid" role="group" aria-label={mode === 'all' ? '전체 응답 시간표' : '팀원별 시간표'} style={{ '--days': visibleDays.length, gridTemplateColumns: columnTemplate, gridTemplateRows: `42px repeat(${times.length}, minmax(0, 1fr)) 18px` }}>
         <div className="grid-corner" aria-hidden="true"/>{columns.map((date, i) => date === null ? <div key={`gap-${i}`} className="week-gap" aria-hidden="true"/> : <div key={date} className="day-heading"><span>{new Intl.DateTimeFormat('ko-KR', { weekday: 'short', timeZone: 'Asia/Seoul' }).format(new Date(date + 'T12:00:00+09:00'))}</span><strong>{Number(date.slice(5, 7))}.{Number(date.slice(8))}</strong></div>)}
@@ -97,7 +119,7 @@ export function TimeView({ data: d, user, reload, ask }) {
           const availableNames = responses.filter(r => r.slots.includes(key)).map(r => r.name).join(' · ');
           const description = mode === 'members' ? `${label} · ${member?.name || '팀원'} ${memberActive ? '가능' : '응답 없음'}` : `${label} · ${availableNames || '가능한 참여자가 없어요.'}`;
           const style = mode === 'all' ? { background:heat(count,result.total), color:count / Math.max(1,result.total) > .6 ? '#fff' : '#173d2d' } : mode === 'members' ? { background: memberActive ? '#246c50' : '#f1f3ef', color:memberActive ? '#fff' : '#173d2d' } : {};
-          return <button type="button" key={key} data-slot={key} className={`time-cell ${mode === 'all' && active ? 'my-outline' : ''} ${chosen ? `confirmation-cell ${choosing ? 'pending-interval' : 'final-interval'} ${t === activeChoice.start ? 'interval-start' : ''} ${t + 30 === activeChoice.start + (m.duration || 30) ? 'interval-end' : ''}` : ''} ${t % 60 ? 'half-row' : ''}`} style={style} aria-label={description + (chosen ? choosing ? ' · 확정 전 선택' : ' · 확정된 모임 시간' : '')} aria-pressed={mode === 'members' ? memberActive : choosing ? chosen : active} title={description}
+          return <button type="button" key={key} data-slot={key} className={`time-cell ${pageSize===4 && !choosing && !m.finalizedTime && mode==='all' && highlighted?.date===date && t>=highlighted.start && t<highlighted.end ? `mobile-recommended-cell ${t===highlighted.start?'recommendation-start':''} ${t+30===highlighted.end?'recommendation-end':''}` : ''} ${mode === 'all' && active ? 'my-outline' : ''} ${chosen ? `confirmation-cell ${choosing ? 'pending-interval' : 'final-interval'} ${t === activeChoice.start ? 'interval-start' : ''} ${t + 30 === activeChoice.start + (m.duration || 30) ? 'interval-end' : ''}` : ''} ${t % 60 ? 'half-row' : ''}`} style={style} aria-label={description + (chosen ? choosing ? ' · 확정 전 선택' : ' · 확정된 모임 시간' : '')} aria-pressed={mode === 'members' ? memberActive : choosing ? chosen : active} title={description}
             onPointerDown={e => { if (editable && e.pointerType === 'mouse' && e.button === 0) { e.preventDefault(); e.currentTarget.focus({preventScroll:true}); drag.current = {value:!active}; availability.setSlot(key,!active); } }}
             onPointerEnter={e => { if (editable && drag.current && e.buttons === 1) availability.setSlot(key,drag.current.value); }}
             onClick={e => { if (mode === 'all') { if (choosing && d.isOwner) choose(date,t); else if(editable && (e.detail === 0 || e.nativeEvent.pointerType !== 'mouse')) availability.setSlot(key,!active); } else setDetail(description); }}>
@@ -113,8 +135,8 @@ export function TimeView({ data: d, user, reload, ask }) {
     <aside className="candidate-panel">
     <div className={`time-work-mode ${choosing ? 'choosing-mode' : ''}`}>{(choosing || !m.finalizedTime || editing) && <div className={!choosing && !m.finalizedTime && d.isOwner ? "sr-only" : undefined}><h2>{choosing ? '모임 시간 선택 중' : '내 가능 시간 입력'}</h2><p>{choosing ? '시작할 시간을 골라주세요 · 내 응답은 바뀌지 않아요' : '가능한 칸을 누르면 자동 저장돼요. 다시 누르면 취소돼요.'}</p></div>}{choosing ? <Button secondary onClick={cancelChoice}>선택 취소</Button> : <div className="inline-actions">{m.finalizedTime && <Button secondary disabled={busy || !!availability.error} onClick={() => {setMode('all');setEditing(v=>!v);}}>{editing ? '입력 마치기' : '내 가능 시간 수정'}</Button>}{!m.finalizedTime && d.isOwner && <Button secondary disabled={busy || !!availability.error} onClick={beginChoice}><Bell size={18} aria-hidden="true"/>모임 시간 정하기</Button>}</div>}</div>
       {(choosing || m.finalizedTime) && <section className="meeting-time-picker"><h2 className={!choosing ? "confirmed-time-title" : undefined}>{choosing ? '선택한 모임 시간' : '확정 약속 시간'}</h2>{activeChoice ? <><div className="chosen-time"><strong>{shortDate(activeChoice.date)}</strong><strong>{clock(activeChoice.start)}{m.duration == null ? ' 시작' : ' ~ ' + clock(activeChoice.start + choiceDuration)}</strong><span>{m.duration == null ? '시작 시간에 가능한 사람' : durationLabel(choiceDuration) + ' 내내 가능한 사람'}</span><b className="attendance-count">{choiceCount} / {result.total}명</b><p className="available-people">{choicePeople.map(p=>p.name).join(' · ') || '가능한 응답자가 없어요.'}</p></div>{responses.some(p=>!choicePeople.includes(p)) && <p className="small muted">참석 어려움: {responses.filter(p=>!choicePeople.includes(p)).map(p=>p.name).join(' · ')}</p>}</> : <p className="empty-copy">표에서 시작 시간을 선택하세요.{m.duration == null ? ' 시작 시간만 선택해요.' : ' ' + durationLabel(m.duration) + ' 구간이 함께 선택돼요.'}</p>}{choosing && d.isOwner && <><Button disabled={!choice || shortChoice || busy || !!availability.error} onClick={confirmTime}>이 시간으로 확정</Button>{shortChoice && <p className="small muted">모임 소요 시간보다 짧아요. 표에서 전체 시간을 확보할 수 있는 시작 칸을 선택해 주세요.</p>}</>}{choosing && <Button secondary onClick={cancelChoice}>추천으로 돌아가기</Button>}{m.finalizedTime && !choosing && d.isOwner && <div className="final-actions"><Button onClick={() => ask('시간 확정을 취소할까요?', '참여자의 응답은 유지하고 확정만 취소해요.', 'reopen/time')}>시간 확정 취소</Button></div>}</section>}
-      {!m.finalizedTime && !choosing && <section className="recommendations-card"><div className="candidate-heading"><h2>추천 시간</h2></div>
-      {!m.finalizedTime && !choosing && best && <section className="best-candidate"><h3>{shortDate(best.date)}</h3><strong>{clock(best.start)} ~ {clock(best.end)}</strong><p>{best.count}/{result.total}명 · {durationLabel(m.duration)} 내내 가능</p><p className="available-people">{best.people.join(' · ')}</p>{d.isOwner && <Button secondary disabled={busy || !!availability.error} onClick={() => previewCandidate(best)}>이 시간 검토하기</Button>}</section>}
+      {!m.finalizedTime && !choosing && <><div className={`recommendation-backdrop ${recommendationsOpen ? 'is-open' : ''}`} onClick={()=>setRecommendationsOpen(false)}/><section ref={recommendationSheet} tabIndex={-1} role={recommendationsOpen ? 'dialog' : undefined} aria-modal={recommendationsOpen ? true : undefined} aria-label="추천 시간" className={`recommendations-card ${recommendationsOpen ? 'mobile-sheet-open' : ''}`}><div className="mobile-sheet-handle"/><div className="candidate-heading"><h2>추천 시간</h2><button type="button" className="mobile-sheet-close icon-button" aria-label="추천 시간 닫기" onClick={()=>setRecommendationsOpen(false)}><X size={22}/></button></div>
+      {!m.finalizedTime && !choosing && best && <section className="best-candidate"><h3>{shortDate(best.date)}</h3><strong>{clock(best.start)} ~ {clock(best.end)}</strong><p>{best.count}/{result.total}명 · {durationLabel(m.duration)} 내내 가능</p><p className="available-people"><span className="mobile-people-avatars" aria-hidden="true">{best.people.slice(0,4).map((name,i)=><i key={i}>{name.slice(0,1)}</i>)}</span>{best.people.join(' · ')}</p>{d.isOwner && <Button secondary disabled={busy || !!availability.error} onClick={() => previewCandidate(best)}>이 시간 검토하기</Button>}</section>}
       {!m.finalizedTime && !choosing && (m.duration !== null ? <>
         {[
           ['all','모두가 끝까지 함께할 수 있어요'],
@@ -122,9 +144,9 @@ export function TimeView({ data: d, user, reload, ask }) {
           ['short','다수가 가능하지만 시간이 짧아요']
         ].map(([key,title]) => <details className="recommendation-group" data-recommendation={key} key={key}><summary><span>{title}</span><span className="recommendation-count">{groups[key].length}개</span></summary>{groups[key].length ? groups[key].map(c => <CandidateItem isOwner={d.isOwner} disabled={busy || !!availability.error} onClick={() => previewCandidate(c)} key={`${c.date}/${c.start}`}><span className="candidate-date">{shortDate(c.date)}</span><div><strong>{clock(c.start)} ~ {clock(c.end)}</strong><span className="candidate-count">{c.count}/{result.total}명</span></div><p>{c.people.join(' · ')}</p>{key === 'short' && <p className="small">가능한 길이 {durationLabel(c.end-c.start)} · 모임 {durationLabel(m.duration)}</p>}</CandidateItem>) : <p className="empty-copy">해당되는 시간이 없습니다.</p>}</details>)}
       </> : <p className="small muted undetermined-note">소요 시간이 미정이면 추천 시간을 표시하지 않아요.</p>)}
-      </section>}
+      </section></>}
       {!d.isOwner && <p className="small muted">모임 시간 확정·변경은 주최자가 진행해요.</p>}
-    </aside></div>
+    </aside></div>{d.isOwner && !m.finalizedTime && <div className="mobile-time-action"><div>{(choosing ? choice : highlighted) ? <><strong>{compactDate((choosing ? choice : highlighted).date)} {clock((choosing ? choice : highlighted).start)}–{clock((choosing ? choice.start+choiceDuration : highlighted.end))}</strong><span>{choosing ? choiceCount : highlighted.count}/{result.total}명 가능 · {durationLabel(m.duration)}</span></> : <strong>모임 시간을 선택해주세요</strong>}</div><Button disabled={busy || !!availability.error || !!shortChoice} onClick={()=>{if(choosing && choice)confirmTime();else if(highlighted)previewCandidate(highlighted);else beginChoice();}}><Bell size={20}/>{choosing && choice ? '이 시간으로 확정' : '시간 정하기'}</Button></div>}
   </div>;
 }
 
