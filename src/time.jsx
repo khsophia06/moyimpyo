@@ -117,10 +117,10 @@ export function TimeView({ data: d, user, reload, ask }) {
       {!m.finalizedTime && !choosing && best && <section className="best-candidate"><h3>{shortDate(best.date)}</h3><strong>{clock(best.start)} ~ {clock(best.end)}</strong><p>{best.count}/{result.total}명 · {durationLabel(m.duration)} 내내 가능</p><p className="available-people">{best.people.join(' · ')}</p>{d.isOwner && <Button secondary disabled={busy || !!availability.error} onClick={() => previewCandidate(best)}>이 시간 검토하기</Button>}</section>}
       {!m.finalizedTime && !choosing && (m.duration !== null ? <>
         {[
-          ['all','모두가 끝까지 함께할 수 있어요','응답자 전원이 모임 전체 시간에 참석할 수 있어요.'],
-          ['some','일부가 끝까지 함께할 수 있어요','응답자 중 일부가 모임 전체 시간에 참석할 수 있어요.'],
-          ['short','다수가 가능하지만 시간이 짧아요','응답자의 과반수가 함께 가능하지만, 설정한 소요 시간보다 짧은 구간이에요.']
-        ].map(([key,title,description]) => <details className="recommendation-group" data-recommendation={key} key={key}><summary><span>{title}</span><span className="recommendation-count">{groups[key].length}개</span></summary><p className="small muted">{description}</p>{groups[key].length ? groups[key].map(c => <CandidateItem isOwner={d.isOwner} disabled={busy || !!availability.error} onClick={() => previewCandidate(c)} key={`${c.date}/${c.start}`}><span className="candidate-date">{shortDate(c.date)}</span><div><strong>{clock(c.start)} ~ {clock(c.end)}</strong><span className="candidate-count">{c.count}/{result.total}명</span></div><p>{c.people.join(' · ')}</p>{key === 'short' && <p className="small">가능한 길이 {durationLabel(c.end-c.start)} · 모임 {durationLabel(m.duration)}</p>}</CandidateItem>) : <p className="empty-copy">해당되는 시간이 없습니다.</p>}</details>)}
+          ['all','모두가 끝까지 함께할 수 있어요'],
+          ['some','일부가 끝까지 함께할 수 있어요'],
+          ['short','다수가 가능하지만 시간이 짧아요']
+        ].map(([key,title]) => <details className="recommendation-group" data-recommendation={key} key={key}><summary><span>{title}</span><span className="recommendation-count">{groups[key].length}개</span></summary>{groups[key].length ? groups[key].map(c => <CandidateItem isOwner={d.isOwner} disabled={busy || !!availability.error} onClick={() => previewCandidate(c)} key={`${c.date}/${c.start}`}><span className="candidate-date">{shortDate(c.date)}</span><div><strong>{clock(c.start)} ~ {clock(c.end)}</strong><span className="candidate-count">{c.count}/{result.total}명</span></div><p>{c.people.join(' · ')}</p>{key === 'short' && <p className="small">가능한 길이 {durationLabel(c.end-c.start)} · 모임 {durationLabel(m.duration)}</p>}</CandidateItem>) : <p className="empty-copy">해당되는 시간이 없습니다.</p>}</details>)}
       </> : <p className="small muted undetermined-note">소요 시간이 미정이면 추천 시간을 표시하지 않아요.</p>)}
       </section>}
       {!d.isOwner && <p className="small muted">모임 시간 확정·변경은 주최자가 진행해요.</p>}

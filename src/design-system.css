@@ -81,3 +81,4 @@ body:has(.meeting-detail-page) .site-header{height:92px}
 @media(max-width:767px){.meeting-detail-page .meeting-description{font-size:14px;line-height:23px}}
 .share-copy-check{display:inline-flex;align-items:center;color:var(--accent)}
 .place-page .save-bar>.button{margin-left:auto}
+.redesigned-time .best-candidate .available-people{background:none;padding:0}.redesigned-time .recommendation-group summary>span:first-child{font-family:var(--display-font);font-weight:600}.redesigned-time .recommendation-group .candidate{background:#fff;padding:24px;margin-top:12px;border:0;border-bottom:1px solid var(--line)}@media(min-width:768px) and (max-width:1100px){.redesigned-time .recommendation-group .candidate{padding:18px}}
