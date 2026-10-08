@@ -116,3 +116,30 @@ test('모임 목록은 2개까지 펼치고 3개부터 접는다',async({page})=
   await expect(page.locator('.meeting-role-group').first()).not.toHaveAttribute('open','');
   await expect(page.locator('.meeting-role-group').last()).toHaveAttribute('open','');
 });
+
+
+test('모바일 추천 선택은 다른 주와 응답 저장 중에도 표와 하단에 함께 반영된다',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await mock(page);
+  const crossWeekMeeting={...meeting,dates:['2026-10-02','2026-10-03','2026-10-04','2026-10-05','2026-10-06','2026-10-07'],startMinute:1020,endMinute:1320};
+  const crossWeekResponses=responses.map(p=>({...p,slots:['2026-10-03','2026-10-06','2026-10-07'].flatMap(date=>[1080,1110,1140,1170].map(t=>`${date}/${t}`))}));
+  await page.route('**/api/meetings/figma-review',route=>route.fulfill({json:{...data,meeting:crossWeekMeeting,responses:crossWeekResponses,mine:crossWeekResponses[0]}}));
+  let releaseSave;
+  const savePending=new Promise(resolve=>{releaseSave=resolve;});
+  await page.route('**/api/meetings/figma-review/response',async route=>{await savePending;await route.fulfill({json:{ok:true}});});
+  await page.goto('/m/figma-review/time');
+  await page.getByRole('button',{name:'시간 확정하기',exact:true}).click();
+  await page.locator('.recommendation-chips button').first().click();
+  await expect(page.locator('.chosen-time')).toContainText('10월 3일');
+  await page.getByRole('button',{name:'전체 현황',exact:true}).click();
+  await page.locator('.time-cell').first().click();
+  await page.getByRole('button',{name:'시간 확정하기',exact:true}).click();
+  await page.locator('.recommendation-chips button').filter({hasText:'10.6'}).click();
+  await expect(page.locator('.chosen-time')).toContainText('10월 6일');
+  await expect(page.locator('.mobile-time-action')).toContainText('10.6 화 18:00–20:00');
+  await expect(page.locator('.confirmation-cell.pending-interval')).toHaveCount(4);
+  await expect(page.locator('.mobile-date-navigation')).toContainText('10.4 일 – 10.7 수');
+  releaseSave();
+  await expect(page.locator('.mobile-time-action button')).toBeEnabled();
+  await expect(page.locator('.chosen-time')).toContainText('10월 6일');
+});
