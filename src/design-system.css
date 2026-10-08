@@ -123,3 +123,5 @@ body:has(.meeting-detail-page) .site-header{height:92px}
 @media(max-width:767px){.response-section .participant-heading{align-items:flex-start}}
 
 .response-divider{height:1px;background:var(--line);margin:0 0 24px}.home-status-summary{background:#fff;border:0;padding:16px;border-radius:4px}.home-main .summary-row h3{font-family:var(--display-font);font-weight:700;font-size:28px;color:var(--ink)}@media(max-width:767px){.home-status-summary{padding:12px}.home-main .summary-row h3{font-size:24px}}
+
+.home-status-summary{height:150px;min-height:150px;max-height:150px;overflow:auto;align-content:start;flex-shrink:0}@media(max-width:767px){.home-status-summary{height:190px;min-height:190px;max-height:190px}}

@@ -17,7 +17,7 @@ async function capture(page,name){await page.evaluate(async()=>{await document.f
 test('공통 화면: 홈, 폼, 인증, 초대, 로딩과 공유',async({page})=>{
   await page.clock.setFixedTime(new Date('2026-10-08T03:00:00Z'));
   await mock(page);await page.goto('/');
-  await expect(page.getByRole('heading',{name:'쉬운 약속 정하기 클릭 한번에-!'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'쉬운 약속 정하기 클릭 한 번에-!'})).toBeVisible();
   await expect(page.locator('.meeting-role-group').first()).toHaveAttribute('aria-label','주최자인 모임');
   await capture(page,'01-home');
   await page.setViewportSize({width:1280,height:1000});await page.goto('/new');
@@ -103,4 +103,12 @@ test('모임 홈 현황판: 요약, 응답 진행률, 관리와 초대 링크',a
   await page.setViewportSize({width:390,height:844});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
   await capture(page,'home-dashboard-mobile');
+});
+
+test('모임 목록은 2개까지 펼치고 3개부터 접는다',async({page})=>{
+  await mock(page);
+  await page.route('**/api/meetings',route=>route.fulfill({json:[...Array.from({length:3},(_,i)=>({...meeting,id:`host-${i}`,isOwner:true})),...Array.from({length:2},(_,i)=>({...meeting,id:`guest-${i}`,isOwner:false}))]}));
+  await page.goto('/');
+  await expect(page.locator('.meeting-role-group').first()).not.toHaveAttribute('open','');
+  await expect(page.locator('.meeting-role-group').last()).toHaveAttribute('open','');
 });

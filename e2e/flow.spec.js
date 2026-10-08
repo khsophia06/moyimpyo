@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 test('주최자와 별도 모바일 브라우저: 생성, 드래그, 응답 수정, 투표, 독립 확정', async ({ page, browser }) => {
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   await page.clock.setFixedTime(new Date('2026-10-03T03:00:00Z'));
-  await page.goto('/'); await expect(page.getByRole('heading', { name: '쉬운 약속 정하기 클릭 한번에-!' })).toBeVisible();
+  await page.goto('/'); await expect(page.getByRole('heading', { name: '쉬운 약속 정하기 클릭 한 번에-!' })).toBeVisible();
   await page.screenshot({ path: 'test-results/home-desktop.png', fullPage: true });
   await page.getByRole('link', { name: '새 모임 만들기' }).click();
   await page.getByRole('button', { name: '처음 오셨나요? 계정 만들기' }).click();
