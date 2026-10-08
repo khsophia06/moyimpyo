@@ -130,3 +130,4 @@ body:has(.meeting-detail-page) .site-header{height:92px}
 @media(min-width:768px){.home-main .summary-row>div:last-child:has(.home-status-summary){display:grid;grid-template-rows:auto auto 48px auto 1fr;align-content:start;align-items:start}.home-main .summary-row>div:last-child>.button{align-self:end}.home-main .summary-row>div:last-child>.status{justify-self:start}.home-main .summary-row>div:last-child>p{margin:0}}
 
 @media(max-width:767px){.redesigned-time .member-picker{margin:12px 0 8px}.redesigned-time .grid-tools:has(>span.small){min-height:0;padding-top:0;gap:8px;padding-bottom:10px}}
+.redesigned-time .member-picker{flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch}.redesigned-time .member-picker::-webkit-scrollbar{display:none}.redesigned-time .member-picker button{flex:0 0 auto;white-space:nowrap}
