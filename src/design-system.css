@@ -107,3 +107,5 @@ body:has(.meeting-detail-page) .site-header{height:92px}
 
 .redesigned-time.response-view .time-layout{grid-template-columns:1fr}.redesigned-time.response-view{padding-bottom:0}
 @media(max-width:767px){.redesigned-time .segmented{grid-template-columns:repeat(3,minmax(0,1fr));width:100%}.redesigned-time .segmented button{font-size:12px;padding:12px 4px;min-width:0}.redesigned-time .grid-tools:has(.mobile-recommendation-strip){grid-template-columns:1fr}.redesigned-time .confirmation-view .mine-legend{display:none}}
+
+.mobile-time-instruction{display:none}@media(max-width:767px){.mobile-time-instruction{display:block}}
