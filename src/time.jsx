@@ -116,7 +116,7 @@ export function TimeView({ data: d, user, reload, ask }) {
         {times.map(t => <Fragment key={t}><div className={`time-label ${t % 60 ? 'half' : ''}`}>{t % 60 === 0 || t === m.startMinute ? clock(t) : ''}</div>{columns.map((date, i) => {
           if (date === null) return <div key={`gap-${i}`} className="week-gap" aria-hidden="true"/>;
           const key = slotKey(date, t), count = result.counts[key] || 0, active = selected.has(key), memberActive = memberSlots.has(key);
-          const chosen = confirming && activeChoice?.date === date && t >= activeChoice.start && t < activeChoice.start + choiceDuration;
+          const chosen = (confirming || (mode === 'all' && !!m.finalizedTime)) && activeChoice?.date === date && t >= activeChoice.start && t < activeChoice.start + choiceDuration;
           const label = `${shortDate(date)} ${clock(t)}~${clock(t + 30)}`;
           const availableNames = responses.filter(r => r.slots.includes(key)).map(r => r.name).join(' · ');
           const description = mode === 'members' ? `${label} · ${member?.name || '팀원'} ${memberActive ? '가능' : '응답 없음'}` : `${label} · ${availableNames || '가능한 참여자가 없어요.'}`;
