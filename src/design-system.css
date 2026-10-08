@@ -131,3 +131,5 @@ body:has(.meeting-detail-page) .site-header{height:92px}
 
 @media(max-width:767px){.redesigned-time .member-picker{margin:12px 0 8px}.redesigned-time .grid-tools:has(>span.small){min-height:0;padding-top:0;gap:8px;padding-bottom:10px}}
 .redesigned-time .member-picker{flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch}.redesigned-time .member-picker::-webkit-scrollbar{display:none}.redesigned-time .member-picker button{flex:0 0 auto;white-space:nowrap}
+
+@media(max-width:767px){.redesigned-time .week-navigation .small-button:hover,.redesigned-time .week-navigation .small-button:focus{background:transparent;color:var(--accent)}.redesigned-time .week-navigation .small-button:active:not(:disabled){background:var(--accent);color:#fff}}

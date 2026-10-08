@@ -47,6 +47,9 @@ test('시간 화면: 추천, 주최자 권한, 반응형 시간표와 공유 링
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
   await expect(page.locator('.refresh-availability')).toBeHidden();
   await expect(page.locator('.mobile-time-action')).toBeVisible();
+  await page.locator('.recommendation-chips button').nth(1).click();
+  await expect(page.locator('.chosen-time')).toContainText('11:00');
+  await expect(page.locator('.confirmation-cell.pending-interval')).toHaveCount(4);
   const chipText = await page.locator('.recommendation-chips').textContent();
   await page.locator('.time-cell').first().click();
   await expect(page.locator('.recommendation-chips')).toHaveText(chipText);
