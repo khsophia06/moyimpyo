@@ -86,3 +86,4 @@ body:has(.meeting-detail-page) .site-header{height:92px}
 .form-page .fields>label:not(.check-label),.form-page .fields .field-pair>label,.form-page .fields>fieldset>legend:not(.sr-only){font-size:16px;font-weight:650}.form-page .place-modes strong{font-size:16px;font-weight:650}
 .form-page .fields input,.form-page .fields select,.form-page .fields textarea{font-weight:400}
 .redesigned-time .candidate-panel h2{font-family:var(--display-font);font-weight:600}
+.meeting-role-group>summary{display:flex;align-items:center;cursor:pointer;list-style:none;margin-bottom:8px}.meeting-role-group>summary::-webkit-details-marker{display:none}.meeting-role-group>summary>span{margin-left:auto;font-size:12px}.meeting-role-group>summary::after{content:"+";font-size:20px;color:var(--accent);margin-left:12px}.meeting-role-group[open]>summary::after{content:"−"}.meeting-role-group>summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
