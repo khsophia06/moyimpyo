@@ -102,6 +102,7 @@ test('모임 홈 현황판: 요약, 응답 진행률, 관리와 초대 링크',a
   await capture(page,'home-dashboard-desktop');
   await page.setViewportSize({width:390,height:844});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+  await expect.poll(async()=>{const a=await page.locator('.home-status-summary').first().boundingBox(),b=await page.locator('.home-status-summary').last().boundingBox();return Math.abs(a.y-b.y)+Math.abs(a.height-b.height);}).toBeLessThan(2);
   await capture(page,'home-dashboard-mobile');
 });
 
