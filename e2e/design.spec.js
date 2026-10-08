@@ -83,3 +83,25 @@ test('장소 카드: 데스크톱과 모바일 선택 상태 및 메뉴',async({
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
   await capture(page,'place-cards-mobile');
 });
+
+test('모임 홈 현황판: 요약, 응답 진행률, 관리와 초대 링크',async({page,context})=>{
+  await mock(page);
+  await page.route('**/api/meetings/figma-review',route=>route.fulfill({json:{...data,participants:responses.map((p,i)=>({...p,isMine:i===0,isOwner:i===0,responded:i<3})),places:[{id:'one',name:'유니클로 목동점',count:2}]}}));
+  await page.goto('/m/figma-review');
+  await expect(page.locator('.home-status-summary').first()).toContainText('4/4명 가능');
+  await expect(page.locator('.home-status-summary').last()).toContainText('유니클로 목동점');
+  await expect(page.locator('.response-progress-label')).toHaveText('4명 중 3명 응답');
+  await context.grantPermissions(['clipboard-read','clipboard-write']);
+  await page.getByRole('button',{name:'미응답자에게 보낼 링크 복사'}).click();
+  await expect(page.getByRole('button',{name:'초대 링크 복사 완료'})).toBeVisible();
+  expect(await page.evaluate(()=>navigator.clipboard.readText())).toContain('/m/figma-review');
+  await page.getByLabel('가현 관리').click();
+  await expect(page.getByRole('button',{name:'이름 수정'})).toBeVisible();
+  await page.getByLabel('가현 관리').click();
+  const cards=await page.locator('.home-main').boundingBox(), members=await page.locator('.response-section').boundingBox();
+  expect(Math.abs(cards.x+cards.width-members.x-members.width)).toBeLessThan(2);
+  await capture(page,'home-dashboard-desktop');
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+  await capture(page,'home-dashboard-mobile');
+});
