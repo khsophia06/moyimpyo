@@ -95,7 +95,8 @@ export function TimeView({ data: d, user, reload, ask }) {
           const key = slotKey(date, t), count = result.counts[key] || 0, active = selected.has(key), memberActive = memberSlots.has(key);
           const chosen = mode === 'all' && activeChoice?.date === date && t >= activeChoice.start && t < activeChoice.start + choiceDuration;
           const label = `${shortDate(date)} ${clock(t)}~${clock(t + 30)}`;
-          const description = mode === 'members' ? `${label} · ${member?.name || '팀원'} ${memberActive ? '가능' : '응답 없음'}` : `${label} · 응답자 ${result.total}명 중 ${count}명 가능`;
+          const availableNames = responses.filter(r => r.slots.includes(key)).map(r => r.name).join(' · ');
+          const description = mode === 'members' ? `${label} · ${member?.name || '팀원'} ${memberActive ? '가능' : '응답 없음'}` : `${label} · ${availableNames || '가능한 참여자가 없어요.'}`;
           const style = mode === 'all' ? { background:heat(count,result.total), color:count / Math.max(1,result.total) > .6 ? '#fff' : '#173d2d' } : mode === 'members' ? { background: memberActive ? '#246c50' : '#f1f3ef', color:memberActive ? '#fff' : '#173d2d' } : {};
           return <button type="button" key={key} data-slot={key} className={`time-cell ${mode === 'all' && active ? 'my-outline' : ''} ${chosen ? `confirmation-cell ${choosing ? 'pending-interval' : 'final-interval'} ${t === activeChoice.start ? 'interval-start' : ''} ${t + 30 === activeChoice.start + (m.duration || 30) ? 'interval-end' : ''}` : ''} ${t % 60 ? 'half-row' : ''}`} style={style} aria-label={description + (chosen ? choosing ? ' · 확정 전 선택' : ' · 확정된 모임 시간' : '')} aria-pressed={mode === 'members' ? memberActive : choosing ? chosen : active} title={description}
             onPointerDown={e => { if (editable && e.pointerType === 'mouse' && e.button === 0) { e.preventDefault(); e.currentTarget.focus({preventScroll:true}); drag.current = {value:!active}; availability.setSlot(key,!active); } }}
