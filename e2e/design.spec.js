@@ -50,7 +50,7 @@ test('시간 화면: 추천, 주최자 권한, 반응형 시간표와 공유 링
   await expect(page.getByRole('button',{name:'모임 시간 정하기'})).toHaveCount(0);
   await page.goto('/m/figma-review');
   await expect(page.locator('.meeting-heading .meeting-description')).toHaveText(meeting.description);
-  await page.locator('.response-section').getByRole('button',{name:'공유',exact:true}).click();
+  await page.locator('.promise-heading').getByRole('button',{name:'공유',exact:true}).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByRole('button',{name:'공유창 닫기'}).click();
   await page.getByRole('link',{name:'장소',exact:true}).click();

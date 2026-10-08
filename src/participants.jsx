@@ -1,4 +1,4 @@
-import { ShareMeeting } from './share-meeting';
+
 import React, { useState } from 'react';
 import { ArrowRight, CrownSimple } from '@phosphor-icons/react';
 import { api } from './api';
@@ -9,7 +9,7 @@ export function Participants({ data: d, reload, ask }) {
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const members = d.participants || [];
   return <section className="response-section">
-    <div className="section-title"><h2>모임원 <span className="count">{members.length}</span></h2><ShareMeeting meeting={d.meeting}/></div>
+    <div className="section-title"><h2>모임원 <span className="count">{members.length}</span></h2></div>
     <Notice error>{error}</Notice>
     {editing && <form className="rename-participant" onSubmit={async e => {
       e.preventDefault(); setBusy(true); setError('');
