@@ -11,7 +11,7 @@ export function Participants({ data: d, reload, ask }) {
   const members = d.participants || [];
   const completed = members.filter(p=>p.responded && p.revision >= d.meeting.timeRevision).length;
   return <section className="response-section">
-    <div className="section-title participant-heading"><div><h2>모임원 <span className="count">{members.length}</span></h2><p className="response-progress-label">{members.length}명 중 {completed}명 응답</p></div>{d.isOwner && <ShareMeeting meeting={d.meeting}/>}</div><div className="response-progress" role="progressbar" aria-label="시간 응답 진행률" aria-valuemin={0} aria-valuemax={members.length || 1} aria-valuenow={completed}><i style={{width:`${completed/Math.max(1,members.length)*100}%`}}/></div>
+    <div className="section-title participant-heading"><div><h2>모임원 <span className="count">{members.length}</span></h2><p className="response-progress-label">{members.length}명 중 {completed}명 응답</p></div>{d.isOwner && <ShareMeeting meeting={d.meeting}/>}</div><div className="response-divider" aria-hidden="true"/>
     <Notice error>{error}</Notice>
     {editing && <form className="rename-participant" onSubmit={async e => {
       e.preventDefault(); setBusy(true); setError('');
