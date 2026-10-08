@@ -90,3 +90,4 @@ body:has(.meeting-detail-page) .site-header{height:92px}
 .redesigned-time .chosen-time{background:#fff;padding:24px}@media(min-width:768px) and (max-width:1100px){.redesigned-time .chosen-time{padding:18px}}
 .redesigned-time .chosen-time .available-people{background:none;padding:0;margin:0}
 .redesigned-time .choosing-mode h2,.redesigned-time .meeting-time-picker>h2:not(.confirmed-time-title){font-weight:700}
+.meeting-topline .inline-actions>.text-link,.meeting-topline .inline-actions>button.text-link{font-size:16px}.place-page .save-bar{justify-content:flex-end;gap:16px}.place-page .save-bar>.button{margin-left:0}.place-page>.section-title:has(>div:empty){display:none}
